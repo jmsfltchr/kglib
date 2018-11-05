@@ -1,8 +1,5 @@
 import kgcn.src.neighbourhood.data.utils as utils
 
-UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL = "UNKNOWN_ROLE_NEIGHBOUR_PLAYS"
-UNKNOWN_ROLE_TARGET_PLAYS_LABEL = "UNKNOWN_ROLE_TARGET_PLAYS"
-
 TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this concept plays a role
 NEIGHBOUR_PLAYS = 1  # In this case the target
 
@@ -12,17 +9,14 @@ ROLEPLAYERS = 1
 
 class TraversalExecutor:
 
-    # TODO Changing queries due to bug
-    # query = "match $x id {}; $relationship($role: $x); get $relationship, $role;")
     ROLES_PLAYED_QUERY = {
-        'query': "match $x id {}; $relationship($x); get $relationship;",
+        'query': "match $x id {}; $relationship($role: $x); get $relationship, $role;",
         'role_variable': 'role',
         'role_direction': TARGET_PLAYS,
         'neighbour_variable': 'relationship'}
 
-    # query = "match $relationship id {}; $relationship($role: $x) isa {}; get $x, $role;"
     ROLEPLAYERS_QUERY = {
-        'query': "match $relationship id {}; $relationship($x) isa {}; get $x;",
+        'query': "match $relationship id {}; $relationship($role: $x) isa {}; get $x, $role;",
         'role_variable': 'role',
         'role_direction': NEIGHBOUR_PLAYS,
         'neighbour_variable': 'x'}
@@ -53,9 +47,7 @@ class TraversalExecutor:
 
             def _roles_iterator():
                 for answer in roles_iterator:
-                    # TODO See above, omitting due to bug
-                    # role_label = answer.get(base_query['role_variable']).label()
-                    role_label = UNKNOWN_ROLE_TARGET_PLAYS_LABEL
+                    role_label = answer.get(base_query['role_variable']).label()
                     relationship_concept = answer.get(base_query['neighbour_variable'])
                     relationship_info = build_concept_info(relationship_concept)
 

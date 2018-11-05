@@ -62,10 +62,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
             self.assertIsInstance(neighbour_role, trv.NeighbourRole)
 
-            self.assertTrue(
-                isinstance(neighbour_role.role_label, str)
-                or neighbour_role.role_label in [ex.UNKNOWN_ROLE_TARGET_PLAYS_LABEL,
-                                                 ex.UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL])
+            self.assertTrue(isinstance(neighbour_role.role_label, str))
             self.assertIn(neighbour_role.role_direction, [ex.TARGET_PLAYS,
                                                           ex.NEIGHBOUR_PLAYS])
             self.assertTrue(self._assert_types_correct(neighbour_role.neighbour_info_with_neighbourhood))
