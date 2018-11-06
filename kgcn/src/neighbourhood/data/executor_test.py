@@ -32,7 +32,7 @@ class BaseGraknIntegrationTests:
             self.assertIn(self.neighbour_type, [r['neighbour_info'].type_label for r in self._res])
 
         def test_num_results(self):
-            self.assertEqual(len(self._res), self.num_results)
+            self.assertEqual(self.num_results, len(self._res))
 
 
 class TestTraversalExecutorFromEntity(BaseGraknIntegrationTests.GraknIntegrationTest):
