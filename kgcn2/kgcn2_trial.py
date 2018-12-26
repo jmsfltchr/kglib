@@ -13,7 +13,7 @@ queries = [
     # Not currently worthwhile due to attribute having been removed
     # 'match $x isa traded-item id {}, has item-purpose $p; $y isa traded-item, has item-purpose $p; limit 10; get;',
     
-    'match $x isa traded-item id {}; $tm($x, $t) isa taxon-membership; $t isa taxon, has name $n; limit 10; get;',
+    'match $x isa traded-item id {}; $tm($x, $t) isa taxon-membership; $t isa taxon, has name $n; limit 10; get;',  # $x, $tm, $t, $n
     'match $x isa traded-item id {}; $tm($x, $t) isa taxon-membership; $t isa taxon; limit 10; get;',
     'match $x isa traded-item id {}; $tm($x) isa taxon-membership; limit 10; get;',
     'match $x isa traded-item id {}; limit 10; get;',
@@ -38,6 +38,9 @@ queries = [
 
 # TODO Rephrase the queries to execute as a tree structure of types? (actually a graph since types can occur more than once in the tree)
 
+
+# TODO What about non-chain queries
+'match $x isa traded-item id {}; $e($x, $c) isa exchange; $c isa country, has name $n; limit 10; get;'
 
 uri = "localhost:48555"
 keyspace = 'animaltrade_train'
