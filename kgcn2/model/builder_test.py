@@ -20,9 +20,11 @@ where query_features is an ordered dict:
 
 The graph should only contain one component per concept type. This is the basis upon which it is convolutional.
 """
-import collections
 import unittest
+
+import collections
 import networkx as nx
+import tensorflow as tf
 
 import model.builder
 
@@ -70,9 +72,18 @@ class TestBuildKGCNModel(unittest.TestCase):
         with self.subTest('person/add has placeholder'):
             op = self._tf_graph.get_operation_by_name('person/add')
             input_names = [inp.name for inp in op.inputs]
-            self.assertIn('person/unique_count_placeholder:0', input_names)
+            # self.assertIn('person/unique_count_placeholder:0', input_names)
+
+            placeholder_name = 'person/unique_count_placeholder'
+            self.assertIn(placeholder_name + ':0', input_names)
+            placeholder_type = self._tf_graph.get_operation_by_name('person/unique_count_placeholder').type
+            self.assertEqual('Placeholder', placeholder_type)
 
         with self.subTest('employment/add has placeholder'):
             op = self._tf_graph.get_operation_by_name('employment/add')
             input_names = [inp.name for inp in op.inputs]
-            self.assertIn('employment/unique_count_placeholder:0', input_names)
+
+            placeholder_name = 'employment/unique_count_placeholder'
+            self.assertIn(placeholder_name + ':0', input_names)
+            placeholder_type = self._tf_graph.get_operation_by_name('employment/unique_count_placeholder').type
+            self.assertEqual('Placeholder', placeholder_type)
