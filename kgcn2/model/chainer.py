@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-def build_kgcn_model(query_features, components):
+def chain_components(query_features, components):
 
     g = tf.Graph()
     with g.as_default():

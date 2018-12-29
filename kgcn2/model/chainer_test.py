@@ -25,10 +25,10 @@ import unittest
 import collections
 import networkx as nx
 
-import model.builder
+import model.chainer
 
 
-class TestBuildKGCNModel(unittest.TestCase):
+class TestChainComponents(unittest.TestCase):
 
     def setUp(self):
 
@@ -58,7 +58,7 @@ class TestBuildKGCNModel(unittest.TestCase):
         self._components = {'person': MockChainableComponent(),
                             'employment': MockChainableComponent(),
                             }
-        self._tf_graph = model.builder.build_kgcn_model(self._query_features, self._components)
+        self._tf_graph = model.chainer.chain_components(self._query_features, self._components)
 
     def test_one_op_chains_to_next(self):
         # Find the person op
