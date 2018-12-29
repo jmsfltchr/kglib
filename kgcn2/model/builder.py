@@ -32,7 +32,8 @@ def build_kgcn_model(query_features, components):
             for _ in query_graph.nodes:
                 current_query_node_type = query_graph.nodes[current_query_node]['types'][0]
                 with tf.name_scope(current_query_node_type):
-                    tensor = components[current_query_node_type](tensor)
+                    unique_count_placeholder = tf.placeholder(tf.int32, name='unique_count_placeholder')
+                    tensor = components[current_query_node_type](tensor, unique_count_placeholder)
 
                 matching_edges = set()
                 for edge in query_edges:
