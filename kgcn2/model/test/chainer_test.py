@@ -49,8 +49,8 @@ class TestChainComponents(unittest.TestCase):
         self._query_features = collections.OrderedDict([(query, query_graph)])
 
         class MockChainableComponent:
-            def __call__(self, input_tensor, unique_count_to_add):
-                output_tensor = input_tensor + unique_count_to_add
+            def __call__(self, input_tensor):
+                output_tensor = input_tensor + 1
                 # with tf.name_scope('full_count'):
                 #     tf.placeholder(tf.int32, name='placeholder')
                 return output_tensor
@@ -68,18 +68,18 @@ class TestChainComponents(unittest.TestCase):
         # Check the input matches
         self.assertIn('employment/add:0', input_names)
 
-    def test_each_type_has_unique_count_placeholder(self):
-
-        for schema_type_name in ['person', 'employment']:
-            with self.subTest(schema_type_name + '/add has placeholder'):
-                op = self._tf_graph.get_operation_by_name(schema_type_name + '/add')
-                input_names = [inp.name for inp in op.inputs]
-                # self.assertIn(schema_type_name + '/unique_count_placeholder:0', input_names)
-
-                placeholder_name = schema_type_name + '/unique_count_placeholder'
-                self.assertIn(placeholder_name + ':0', input_names)
-                placeholder_type = self._tf_graph.get_operation_by_name(schema_type_name + '/unique_count_placeholder').type
-                self.assertEqual('Placeholder', placeholder_type)
+    # def test_each_type_has_unique_count_placeholder(self):
+    #
+    #     for schema_type_name in ['person', 'employment']:
+    #         with self.subTest(schema_type_name + '/add has placeholder'):
+    #             op = self._tf_graph.get_operation_by_name(schema_type_name + '/add')
+    #             input_names = [inp.name for inp in op.inputs]
+    #             # self.assertIn(schema_type_name + '/unique_count_placeholder:0', input_names)
+    #
+    #             placeholder_name = schema_type_name + '/unique_count_placeholder'
+    #             self.assertIn(placeholder_name + ':0', input_names)
+    #             placeholder_type = self._tf_graph.get_operation_by_name(schema_type_name + '/unique_count_placeholder').type
+    #             self.assertEqual('Placeholder', placeholder_type)
 
     # def test_query_feature_has_full_count_input(self):
     #     # This test is for the chainable components, not the chained result

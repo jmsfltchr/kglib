@@ -1,0 +1,48 @@
+"""
+Chainable learning components
+These components are designed to represent a top-level Grakn type. e.g. there will be a component that performs some
+transformation to represent `person` or `employment`. Subtypes should chain with their parent types,
+so that hierarchical transformations are constructed. In this way, whole queries can have a transformation built from
+chaining these components, and the results of those queries used as the input data.
+
+Components should interface to one another so that they can be chained. They should always require a unique count,
+and have the capacity for a full count input for the case that they are the terminating end of the query.
+
+Requirements:
+-   Takes the same number of inputs as it gives outputs
+-   The same component is reused everywhere that the type is used
+-   (Possibly) Components should accept an input to indicate the proportion of results found that were unique for this
+    type
+"""
+
+import unittest
+
+import numpy as np
+import tensorflow as tf
+
+import model.chainables as chainables
+
+
+class TestDenseChainable(unittest.TestCase):
+
+    def test_input_shape_equals_output_shape(self):
+        chainable = chainables.DenseChainable(5)
+
+        input_placeholder = tf.placeholder(tf.float32, shape=(20, 5))
+        output_tensor = chainable(input_placeholder)
+
+        input_vector = np.ones((20, 5))
+        expected_output_vector_shape = (20, 5)
+
+        # Create a session and do any necessary initialisation
+        tf_session = tf.Session()
+        init_global = tf.global_variables_initializer()
+        init_local = tf.local_variables_initializer()  # Added to initialise tf.metrics.recall
+        init_tables = tf.tables_initializer()
+
+        tf_session.run(init_global)
+        tf_session.run(init_local)
+        tf_session.run(init_tables)
+
+        output_vector = tf_session.run(output_tensor, {input_placeholder: input_vector})
+        self.assertEqual(expected_output_vector_shape, output_vector.shape)
