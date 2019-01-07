@@ -11,6 +11,7 @@ and have the capacity for a full count input for the case that they are the term
 Requirements:
 -   Takes the same number of inputs as it gives outputs (should throw an error if untrue)
 -   The same component (or it's characteristics e.g. weights, offsets) is reused everywhere that the type is used
+-   Is accessible from the tf graph by name
 -   (Possibly) Components should accept an input to indicate the proportion of results found that were unique for this
     type
 """
@@ -26,7 +27,7 @@ import model.chainables as chainables
 class TestDenseChainable(unittest.TestCase):
 
     def test_input_shape_equals_output_shape(self):
-        chainable = chainables.DenseChainable(5)
+        chainable = chainables.DenseChainable('person', 5)
 
         input_placeholder = tf.placeholder(tf.float32, shape=(20, 5))
         output_tensor = chainable(input_placeholder)
@@ -44,7 +45,7 @@ class TestDenseChainable(unittest.TestCase):
         self.assertEqual(expected_output_vector_shape, output_vector.shape)
 
     def test_if_input_shape_wrong_raise_exception(self):
-        chainable = chainables.DenseChainable(7)
+        chainable = chainables.DenseChainable('person', 7)
 
         input_placeholder = tf.placeholder(tf.float32, shape=(20, 5))
         with self.assertRaises(ValueError) as context:
@@ -58,7 +59,7 @@ class TestDenseChainable(unittest.TestCase):
         def _create_dense(units):
             return tf.layers.Dense(units, activation=tf.nn.relu, kernel_initializer=tf.random_uniform_initializer)
 
-        chainable = chainables.DenseChainable(5, dense_layer=_create_dense)
+        chainable = chainables.DenseChainable('person', 5, dense_layer=_create_dense)
 
         input_placeholder_1 = tf.placeholder(tf.float32, shape=(20, 5))
         output_tensor_1 = chainable(input_placeholder_1)
@@ -75,8 +76,6 @@ class TestDenseChainable(unittest.TestCase):
         output_vector_1, output_vector_2 = tf_session.run((output_tensor_1, output_tensor_2),
                                                           {input_placeholder_1: input_vector,
                                                            input_placeholder_2: input_vector})
-        # output_vector_1 = tf_session.run(output_tensor_1, {input_placeholder_1: input_vector})
-        # output_vector_2 = tf_session.run(output_tensor_2, {input_placeholder_2: input_vector})
         np.testing.assert_array_equal(output_vector_1, output_vector_2)
 
     def test_component_chains_with_itself(self):
@@ -85,7 +84,7 @@ class TestDenseChainable(unittest.TestCase):
         def _create_dense(units):
             return tf.layers.Dense(units, activation=tf.nn.relu, kernel_initializer=tf.random_uniform_initializer)
 
-        chainable = chainables.DenseChainable(5, dense_layer=_create_dense)
+        chainable = chainables.DenseChainable('person', 5, dense_layer=_create_dense)
 
         input_placeholder = tf.placeholder(tf.float32, shape=(20, 5))
         output_tensor_1 = chainable(input_placeholder)
@@ -99,3 +98,11 @@ class TestDenseChainable(unittest.TestCase):
         tf_session.run(init_global)
 
         output_vector_2 = tf_session.run(output_tensor_2, {input_placeholder: input_vector})
+
+    def test_accessible_by_name(self):
+        chainable = chainables.DenseChainable('person', 5)
+        input_placeholder = tf.placeholder(tf.float32, shape=(20, 5))
+        output_tensor = chainable(input_placeholder)
+        g = tf.get_default_graph()
+        tensor = g.get_tensor_by_name('person/dense/MatMul:0')
+        op = g.get_operation_by_name('person/dense/MatMul')
