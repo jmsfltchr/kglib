@@ -106,3 +106,10 @@ class TestDenseChainable(unittest.TestCase):
         g = tf.get_default_graph()
         tensor = g.get_tensor_by_name('person/dense/MatMul:0')
         op = g.get_operation_by_name('person/dense/MatMul')
+
+
+class TestChainableWithOutOfChainInputs(unittest.TestCase):
+    def test_when_out_of_chain_input_then_output_length_correct(self):
+        chainable = chainables.ChainableWithOutOfChainInputs()
+        output_tensor = chainable()
+
