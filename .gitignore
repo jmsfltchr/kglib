@@ -1,3 +1,6 @@
+# Bazel files
+bazel-*
+
 # Compiled class file
 *.class
 
@@ -26,13 +29,13 @@ hs_err_pid*
 tmp/
 
 # Pycharm config
-.idea
+.idea/
+
+# Virtualenvs
+venv/
 
 # Python cache files
 __pycache__/
-
-# Python init files
-__init__.py
 
 # Model outputs
 out/
