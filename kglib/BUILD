@@ -125,6 +125,16 @@ py_test(
     ]
 )
 
+py_test(
+    name = "normaliser_test",
+    srcs = [
+        "kgcn/preprocess/normaliser_test.py"
+    ],
+    deps = [
+        "kglib",
+    ]
+)
+
 py_library(
     name = "kglib",
     srcs = glob(['__init__.py', 'kgcn/**/*.py']),
