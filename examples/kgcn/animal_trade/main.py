@@ -53,7 +53,7 @@ LABEL_ATTRIBUTE_TYPE = 'appendix'
 ATTRIBUTE_VALUES = [1, 2, 3]
 EXAMPLE_CONCEPT_TYPE = 'traded-item'
 
-NUM_PER_CLASS = 10
+NUM_PER_CLASS = 30
 POPULATION_SIZE_PER_CLASS = 1000
 
 # Params for persisting to files
