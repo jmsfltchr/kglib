@@ -1,14 +1,3 @@
-2019-01-25 19:49:18,009 [main] WARN  grakn.core.common.config.Config - Oops, unable to find Grakn ASCII art. Will just display nothing then.
-2019-01-25 19:49:23,823 [main] WARN  grakn.core.common.config.Config - Oops, unable to find Grakn ASCII art. Will just display nothing then.
-2019-01-25 19:49:32,287 [main] WARN  grakn.core.common.config.Config - Oops, unable to find Grakn ASCII art. Will just display nothing then.
-2019-01-25 19:49:32,578 [main] INFO  grakn.core.server.Server - 
-==================================================
-2019-01-25 19:49:32,578 [main] INFO  grakn.core.server.Server - 
-
-2019-01-25 19:49:32,578 [main] INFO  grakn.core.server.Server - 
-==================================================
-2019-01-25 19:49:32,578 [main] INFO  grakn.core.server.Server - ServerID{value=Jamess-MacBook-Pro.local-7c577c20-a0c2-4041-a8cc-e90b01410af9} is checking the system schema
-2019-01-25 19:49:34,234 [attribute-deduplicator-daemon-0] INFO  g.c.s.d.AttributeDeduplicatorDaemon - startDeduplicationDaemon() - attribute de-duplicator daemon started.
-2019-01-25 19:49:34,235 [main] INFO  grakn.core.server.Server - Grakn started in 1.657 s
-2019-01-25 19:50:41,997 [main] WARN  grakn.core.common.config.Config - Oops, unable to find Grakn ASCII art. Will just display nothing then.
-2019-01-25 19:50:42,084 [grakn-server-shutdown] INFO  g.c.s.d.AttributeDeduplicatorDaemon - stopDeduplicationDaemon() - stopping the attribute de-duplicator daemon...
+version https://git-lfs.github.com/spec/v1
+oid sha256:07b42f63b0936594ab59429dd9cd959b09d836d77e78e49311f8f2e06f1ac894
+size 1461

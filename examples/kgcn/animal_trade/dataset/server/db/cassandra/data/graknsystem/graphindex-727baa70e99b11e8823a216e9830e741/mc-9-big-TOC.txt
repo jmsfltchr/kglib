@@ -1,8 +1,3 @@
-Index.db
-Statistics.db
-CompressionInfo.db
-TOC.txt
-Summary.db
-Filter.db
-Data.db
-Digest.crc32
+version https://git-lfs.github.com/spec/v1
+oid sha256:d775e72f1aaf98c1d2826ec95f3725523ae9c7ff8fa5726830dfdcda5d9d68a2
+size 92
