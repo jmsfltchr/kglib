@@ -17,22 +17,51 @@
 #  under the License.
 #
 
+import xml.etree.ElementTree as ET
 
-import xmltodict
+import kglib.kgcn.core.ingest.traverse.data.context.utils as utils
 
 
 class XMLMigrator:
-    def __init__(self, tag_mapping):
+    def __init__(self, tag_mapping, tag_containment=None, attr_tag_mapping=None):
+        self._tag_containment = tag_containment
         self._tag_mapping = tag_mapping
+        self._attr_tag_mapping = attr_tag_mapping
 
     def get_insert_statements(self, file_path):
-        doc = xmltodict.parse(file_path)
+        root = ET.fromstring(file_path)
 
-        def _parse_tags(tags_dict):
-            insert_queries = []
-            for tag, contents in tags_dict.items():
-                tag_type = self._tag_mapping[tag]
-                insert_queries.append(f'insert $x isa {tag_type};')
-            return insert_queries
+        def _parse_tags(element, root=False):
+            tag_type = self._tag_mapping[element.tag]
+            insert_query = f'insert $x1 isa {tag_type}'
 
-        return _parse_tags(doc)
+            if self._attr_tag_mapping is not None:
+                # Add attributes to the query
+                for attr_name, value in element.attrib.items():
+                    attr_type = self._attr_tag_mapping[attr_name]
+                    insert_query += f', has {attr_type} \"{value}\"'
+
+            insert_query += ';'
+
+            if not root:
+                insert_query += (f' ('
+                                 f'{self._tag_containment["container_role"]}: $x2, '
+                                 f'{self._tag_containment["containee_role"]}: $x1) isa '
+                                 f'{self._tag_containment["relation"]}; $x2 id {{}};')
+
+            children = []
+            for child in element:
+                children.append(_parse_tags(child))
+
+            if len(children) == 0:
+                return TagQuery(insert_query)
+            else:
+                return TagQuery(insert_query, children)
+
+        return _parse_tags(root, root=True)
+
+
+class TagQuery(utils.PropertyComparable):
+    def __init__(self, query, children=()):
+        self.query = query
+        self.children = children

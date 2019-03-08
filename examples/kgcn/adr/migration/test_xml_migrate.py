@@ -23,26 +23,13 @@ queries to connect data.
 """
 import unittest
 
-import examples.kgcn.adr.migration.xml_migrate as xml_migrate
+import examples.kgcn.adr.migration.xml_migrate as xml
 
 
 class TestMigratorInsertStatements(unittest.TestCase):
-    # xml = (
-    #     '<?xml version="1.0" encoding="UTF-8"?>'
-    #     '<Label drug="adcetris" track="TAC2017_ADR">'
-    #     '<Text>'
-    #     '<Section name="adverse reactions" id="S1">'
-    #     'ADVERSE REACTIONS INFORMATION'
-    #     '</Section>'
-    # )
-
-    # 'define': ['xml-tag sub entity;',
-    #            'tag-Label sub xml-tag;',
-    #            'xml-tag-attribute sub attribute, datatype string;'
-    #            'tag-attr-drug sub xml-tag-attribute;'],
 
     def test_single_tag(self):
-        migrator = xml_migrate.XMLMigrator(tag_mapping={'Label': 'tag-label'})
+        migrator = xml.XMLMigrator(tag_mapping={'Label': 'tag-label'})
 
         xml_content = (
             '<?xml version="1.0" encoding="UTF-8"?>'
@@ -51,12 +38,30 @@ class TestMigratorInsertStatements(unittest.TestCase):
         )
         inserts = migrator.get_insert_statements(xml_content)
 
-        expected_inserts = ['insert $x isa tag-label;']
-        self.assertListEqual(expected_inserts, inserts)
+        expected_inserts = xml.TagQuery('insert $x1 isa tag-label;')
+        self.assertEqual(expected_inserts, inserts)
+
+    def test_nested_tags(self):
+        migrator = xml.XMLMigrator(tag_mapping={'Label': 'tag-label', 'Text': 'tag-text'},
+                                   tag_containment={'relation': 'tag-containment',
+                                                    'container_role': 'tag-container',
+                                                    'containee_role': 'tag-containee'})
+        xml_content = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<Label>'
+            '<Text>'
+            '</Text>'
+            '</Label>'
+        )
+        inserts = migrator.get_insert_statements(xml_content)
+
+        expected_inserts = xml.TagQuery('insert $x1 isa tag-label;', [xml.TagQuery(
+            'insert $x1 isa tag-text; (tag-container: $x2, tag-containee: $x1) isa tag-containment; $x2 id {};')])
+        self.assertEqual(expected_inserts, inserts)
 
     def test_tag_attributes(self):
-        migrator = xml_migrate.XMLMigrator(tag_mapping={'Label': 'tag-label'},
-                                           attr_tag_mapping={'drug': 'tag-attr-drug', 'track': 'tag-attr-track'})
+        migrator = xml.XMLMigrator(tag_mapping={'Label': 'tag-label'},
+                                   attr_tag_mapping={'drug': 'tag-attr-drug', 'track': 'tag-attr-track'})
 
         xml_content = (
             '<?xml version="1.0" encoding="UTF-8"?>'
@@ -66,4 +71,5 @@ class TestMigratorInsertStatements(unittest.TestCase):
 
         inserts = migrator.get_insert_statements(xml_content)
 
-        expected_inserts = ['insert $x isa tag-Label, has tag-attr-drug "adcetris", has tag-attr-track "TAC2017_ADR";']
+        expected_inserts = xml.TagQuery('insert $x1 isa tag-label, has tag-attr-drug "adcetris", has tag-attr-track "TAC2017_ADR";')
+        self.assertEqual(expected_inserts, inserts)
