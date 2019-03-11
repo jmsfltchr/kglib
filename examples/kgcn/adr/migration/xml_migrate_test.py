@@ -62,7 +62,7 @@ class TestMigratorInsertStatements(unittest.TestCase):
 
     def test_tag_attributes(self):
         migrator = xml.XMLMigrator(tag_mapping={'Label': 'tag-label'},
-                                   attr_tag_mapping={'drug': 'tag-attr-drug', 'track': 'tag-attr-track'})
+                                   attr_tag_mapping={'Label': {'drug': 'tag-attr-drug', 'track': 'tag-attr-track'}})
 
         xml_content = (
             '<?xml version="1.0" encoding="UTF-8"?>'
@@ -75,6 +75,43 @@ class TestMigratorInsertStatements(unittest.TestCase):
         expected_inserts = xml.QueryTree(
             'insert $x1 isa tag-label, has tag-attr-drug "adcetris", has tag-attr-track "TAC2017_ADR";', "x1", None)
         self.assertEqual(expected_inserts, inserts)
+
+
+class TestMigratorDefineStatements(unittest.TestCase):
+
+    def test_single_labels(self):
+
+        migrator = xml.XMLMigrator(tag_mapping={'Label': 'tag-label'})
+
+        defines = migrator.get_define_statements()
+
+        expected_defines = ['define tag-label sub entity;']
+        self.assertListEqual(expected_defines, defines)
+
+    def test_nested_labels(self):
+
+        migrator = xml.XMLMigrator(tag_mapping={'Label': 'tag-label', 'Text': 'tag-text'},
+                                   tag_containment={'relation': 'tag-containment',
+                                                    'container_role': 'tag-container',
+                                                    'containee_role': 'tag-containee'})
+
+        defines = migrator.get_define_statements()
+
+        expected_defines = ['define tag-containment sub relation, relates tag-container, relates tag-containee;',
+                            'define tag-label sub entity, plays tag-container, plays tag-containee;',
+                            'define tag-text sub entity, plays tag-container, plays tag-containee;']
+        self.assertListEqual(expected_defines, defines)
+
+    def test_tag_attributes(self):
+        migrator = xml.XMLMigrator(tag_mapping={'Label': 'tag-label'},
+                                   attr_tag_mapping={'Label': {'drug': 'tag-attr-drug', 'track': 'tag-attr-track'}})
+
+        defines = migrator.get_define_statements()
+
+        expected_defines = ['define tag-attr-drug sub attribute, datatype string;',
+                            'define tag-attr-track sub attribute, datatype string;',
+                            'define tag-label sub entity, has tag-attr-drug, has tag-attr-track;']
+        self.assertListEqual(expected_defines, defines)
 
 
 if __name__ == "__main__":

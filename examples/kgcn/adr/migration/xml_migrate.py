@@ -38,7 +38,7 @@ class XMLMigrator:
             if self._attr_tag_mapping is not None:
                 # Add attributes to the query
                 for attr_name, value in element.attrib.items():
-                    attr_type = self._attr_tag_mapping[attr_name]
+                    attr_type = self._attr_tag_mapping[element.tag][attr_name]
                     insert_query += f', has {attr_type} \"{value}\"'
 
             insert_query += ';'
@@ -63,6 +63,36 @@ class XMLMigrator:
                 return QueryTree(insert_query, "x1", sub_var=sub_var, children=children)
 
         return _parse_tags(root, root=True)
+
+    def get_define_statements(self):
+        define_statements = []
+
+        if self._tag_containment:
+            relation_define = (f'define {self._tag_containment["relation"]} sub relation, '
+                               f'relates {self._tag_containment["container_role"]}, '
+                               f'relates {self._tag_containment["containee_role"]};')
+            define_statements.append(relation_define)
+
+        for tag, label in self._tag_mapping.items():
+
+            if self._attr_tag_mapping:
+                for tag_attribute, attribute_label in self._attr_tag_mapping[tag].items():
+                    define_attribute = f'define {attribute_label} sub attribute, datatype string;'
+                    define_statements.append(define_attribute)
+
+            define = f'define {label} sub entity'
+
+            if self._attr_tag_mapping:
+                for tag_attribute, attribute_label in self._attr_tag_mapping[tag].items():
+                    define += f', has {attribute_label}'
+
+            if self._tag_containment:
+                define += (f', plays {self._tag_containment["container_role"]}'
+                           f', plays {self._tag_containment["containee_role"]}')
+            define += ';'
+
+            define_statements.append(define)
+        return define_statements
 
 
 class QueryTree(utils.PropertyComparable):
