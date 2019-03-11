@@ -16,6 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+
 import unittest
 import unittest.mock as mock
 
@@ -33,9 +34,11 @@ class TestQueryTreeExecutor(unittest.TestCase):
         query = 'insert $x1 isa tag-label;'
         query_tree = xml.QueryTree(query, "x1")
 
-        grakn_session_mock = mock.MagicMock(grakn.Session)
-        transaction_mock = mock.MagicMock(grakn.Transaction)
-        grakn_session_mock.transaction.return_value = transaction_mock
+        grakn_session_mock = mock.MagicMock(grakn.client.Session)
+        transaction_builder_mock = mock.MagicMock(grakn.client.TransactionBuilder)
+        transaction_mock = mock.MagicMock(grakn.client.Transaction)
+        transaction_builder_mock.write.return_value = transaction_mock
+        grakn_session_mock.transaction.return_value = transaction_builder_mock
 
         exe = ex.QueryTreeExecutor(grakn_session_mock)
         exe.insert(query_tree)
@@ -50,9 +53,11 @@ class TestQueryTreeExecutor(unittest.TestCase):
                   'tag-containment;'
         query_tree = xml.QueryTree(query_1, "x1", children=[xml.QueryTree(query_2, "x1", sub_var='x2')])
 
-        grakn_session_mock = mock.MagicMock(grakn.Session)
-        transaction_mock = mock.MagicMock(grakn.Transaction)
-        grakn_session_mock.transaction.return_value = transaction_mock
+        grakn_session_mock = mock.MagicMock(grakn.client.Session)
+        transaction_builder_mock = mock.MagicMock(grakn.client.TransactionBuilder)
+        transaction_mock = mock.MagicMock(grakn.client.Transaction)
+        transaction_builder_mock.write.return_value = transaction_mock
+        grakn_session_mock.transaction.return_value = transaction_builder_mock
 
         response_mock = mock.MagicMock(ResponseReader.ResponseIterator)
 

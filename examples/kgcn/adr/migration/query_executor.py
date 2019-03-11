@@ -16,17 +16,18 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+
 import grakn
 
 import examples.kgcn.adr.migration.xml_migrate as xml
 
 
 class QueryTreeExecutor:
-    def __init__(self, grakn_session: grakn.Session):
+    def __init__(self, grakn_session: grakn.client.Session):
         self._grakn_session = grakn_session
 
     def insert(self, query_tree: xml.QueryTree):
-        tx = self._grakn_session.transaction(grakn.TxType.WRITE)
+        tx = self._grakn_session.transaction().write()
 
         def _recursive_insert(q_tree, parent_id):
 
@@ -35,11 +36,16 @@ class QueryTreeExecutor:
             else:
                 query = q_tree.query.format(parent_id)
 
+            print(query)
             ans = tx.query(query)
-            thing_id = next(ans).get(q_tree.id_var).id
+            next_ans = next(ans)
+            print(next_ans)
+            thing_id = next_ans.get(q_tree.id_var).id
+            print(thing_id)
 
             if q_tree.children:
                 for child in q_tree.children:
                     _recursive_insert(child, thing_id)
 
         _recursive_insert(query_tree, None)
+        tx.commit()

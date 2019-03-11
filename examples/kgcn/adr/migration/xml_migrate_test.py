@@ -113,6 +113,18 @@ class TestMigratorDefineStatements(unittest.TestCase):
                             'define tag-label sub entity, has tag-attr-drug, has tag-attr-track;']
         self.assertListEqual(expected_defines, defines)
 
+    def test_tag_with_and_without_attributes(self):
+        migrator = xml.XMLMigrator(tag_mapping={'Label': 'tag-label', 'Text': 'tag-text'},
+                                   attr_tag_mapping={'Label': {'drug': 'tag-attr-drug', 'track': 'tag-attr-track'}})
+
+        defines = migrator.get_define_statements()
+
+        expected_defines = ['define tag-attr-drug sub attribute, datatype string;',
+                            'define tag-attr-track sub attribute, datatype string;',
+                            'define tag-label sub entity, has tag-attr-drug, has tag-attr-track;',
+                            'define tag-text sub entity;']
+        self.assertListEqual(expected_defines, defines)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -29,7 +29,10 @@ class XMLMigrator:
         self._attr_tag_mapping = attr_tag_mapping
 
     def get_insert_statements(self, file_path):
-        root = ET.fromstring(file_path)
+        try:
+            root = ET.fromstring(file_path)
+        except:
+            root = ET.parse(file_path).getroot()
 
         def _parse_tags(element, root=False):
             tag_type = self._tag_mapping[element.tag]
@@ -75,14 +78,16 @@ class XMLMigrator:
 
         for tag, label in self._tag_mapping.items():
 
-            if self._attr_tag_mapping:
+            do_attr_mapping = self._attr_tag_mapping and (tag in self._attr_tag_mapping)
+
+            if do_attr_mapping:
                 for tag_attribute, attribute_label in self._attr_tag_mapping[tag].items():
                     define_attribute = f'define {attribute_label} sub attribute, datatype string;'
                     define_statements.append(define_attribute)
 
             define = f'define {label} sub entity'
 
-            if self._attr_tag_mapping:
+            if do_attr_mapping:
                 for tag_attribute, attribute_label in self._attr_tag_mapping[tag].items():
                     define += f', has {attribute_label}'
 
