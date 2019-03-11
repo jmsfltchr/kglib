@@ -38,7 +38,7 @@ class TestMigratorInsertStatements(unittest.TestCase):
         )
         inserts = migrator.get_insert_statements(xml_content)
 
-        expected_inserts = xml.QueryTree('insert $x1 isa tag-label;')
+        expected_inserts = xml.QueryTree('insert $x1 isa tag-label;', "x1", None)
         self.assertEqual(expected_inserts, inserts)
 
     def test_nested_tags(self):
@@ -55,9 +55,9 @@ class TestMigratorInsertStatements(unittest.TestCase):
         )
         inserts = migrator.get_insert_statements(xml_content)
 
-        expected_inserts = xml.QueryTree('insert $x1 isa tag-label;', [xml.QueryTree(
-            'insert $x1 isa tag-text; (tag-container: $x2, tag-containee: $x1) isa tag-containment; $x2 id {};',
-            sub_var='x2')])
+        expected_inserts = xml.QueryTree('insert $x1 isa tag-label;', "x1", children=[xml.QueryTree(
+            'match $x2 id {}; insert $x1 isa tag-text; (tag-container: $x2, tag-containee: $x1) isa tag-containment;',
+            "x1", sub_var='x2')])
         self.assertEqual(expected_inserts, inserts)
 
     def test_tag_attributes(self):
@@ -72,7 +72,8 @@ class TestMigratorInsertStatements(unittest.TestCase):
 
         inserts = migrator.get_insert_statements(xml_content)
 
-        expected_inserts = xml.QueryTree('insert $x1 isa tag-label, has tag-attr-drug "adcetris", has tag-attr-track "TAC2017_ADR";')
+        expected_inserts = xml.QueryTree(
+            'insert $x1 isa tag-label, has tag-attr-drug "adcetris", has tag-attr-track "TAC2017_ADR";', "x1", None)
         self.assertEqual(expected_inserts, inserts)
 
 

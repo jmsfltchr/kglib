@@ -45,20 +45,22 @@ class XMLMigrator:
 
             sub_var = None
             if not root:
+
+                insert_query = 'match $x2 id {}; ' + insert_query
                 insert_query += (f' ('
                                  f'{self._tag_containment["container_role"]}: $x2, '
                                  f'{self._tag_containment["containee_role"]}: $x1) isa '
-                                 f'{self._tag_containment["relation"]}; $x2 id {{}};')
+                                 f'{self._tag_containment["relation"]};')
                 sub_var = 'x2'
 
             children = []
             for child in element:
                 children.append(_parse_tags(child))
 
-            if len(children) == 0:
-                return QueryTree(insert_query, sub_var=sub_var)
+            if not children:
+                return QueryTree(insert_query, "x1", sub_var=sub_var, children=None)
             else:
-                return QueryTree(insert_query, children=children, sub_var=sub_var)
+                return QueryTree(insert_query, "x1", sub_var=sub_var, children=children)
 
         return _parse_tags(root, root=True)
 
@@ -68,7 +70,8 @@ class QueryTree(utils.PropertyComparable):
     Specifies the query to insert a parsed element, and gives the child queries to be executed, which should be
     formatted with the id of the parent Concept
     """
-    def __init__(self, query, children=(), sub_var=None):
+    def __init__(self, query, id_var, sub_var=None, children=None):
+        self.id_var = id_var
         self.query = query
         self.children = children
         self.sub_var = sub_var
