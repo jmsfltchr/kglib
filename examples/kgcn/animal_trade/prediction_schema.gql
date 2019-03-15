@@ -37,12 +37,20 @@ define
 @has-endangerment-level plays predicted-value;
 
 
+insert $kgcn isa kgcn-model, has kgcn-model-version 0.1;
 
-insert
+match
+#$s isa taxonomic-species, has name "Balaenoptera acutorostrata";
+#$ti1 isa traded-item; $r($s, $ti1) isa taxon-membership; $e1($ti1, $c1, $c2);
+#$c1 isa country, has name "Iceland";
+#$c2 isa country, has name "United States of America";
+#$c3 isa country, has name "Norway";
+#$ti2 isa traded-item; $r2($s, $ti2) isa taxon-membership; $e2($ti2, $c2, $c3);
 $kgcn isa kgcn-model, has kgcn-model-version 0.1;
 
-$t1 id V1282192, has endangerment-level $el1 via $r1; $el1 1; (predicted-value: $r1, predicting-kgcn-model: $kgcn) isa value-prediction, has prediction-score 0.87;
-$t2 id V1364112, has endangerment-level $el2 via $r2; $el2 1; (predicted-value: $r2, predicting-kgcn-model: $kgcn) isa value-prediction, has prediction-score 0.71;
+insert
+$ti1 id V647176, has endangerment-level $el1 via $r1; $el1 1; (predicted-value: $r1, predicting-kgcn-model: $kgcn) isa value-prediction, has prediction-score 0.87;
+$ti2 id V692264, has endangerment-level $el2 via $r2; $el2 1; (predicted-value: $r2, predicting-kgcn-model: $kgcn) isa value-prediction, has prediction-score 0.71;
 
 
 match $t1 isa traded-item, has endangerment-level $el1 via $r1; $el1 1; $vp1(predicted-value: $r1, predicting-kgcn-model: $kgcn) isa value-prediction, has prediction-score $s1; get;
