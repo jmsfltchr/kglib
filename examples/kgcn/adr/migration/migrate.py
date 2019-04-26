@@ -41,8 +41,8 @@ def main():
                                            'Mention': {'id': 'mention-id', 'section': 'section-id',
                                                        'type': 'mention-type', 'start': 'mention-start',
                                                        'len': 'mention-len', 'str': 'name'},
-                                           'Relation': {'id': 'relation-id', 'type': 'relation-type', 'arg1': 'arg1',
-                                                        'arg2': 'arg2'},
+                                           'Relation': {'id': 'relation-id', 'type': 'relation-type',
+                                                        'arg1': 'mention-id', 'arg2': 'mention-id'},
                                            'Reaction': {'id': 'reaction-id', 'str': 'name'},
                                            'Normalization': {'id': 'normalization-id', 'meddra_pt': 'meddra_pt',
                                                              'meddra_pt_id': 'meddra_pt_id', 'meddra_llt': 'name',
@@ -82,13 +82,71 @@ def main():
     client.close()
 
 
+def add_relations():
+    types = (
+        'effect',
+        'negated',
+        'severity',
+        'hypothetical'
+    )
+    define_plays = 'define tag-mention sub entity, plays links;'
+    # define_relation = 'define relation-{} sub relation, relates links;'
+    define_relation = ('define relation-link sub relation, relates links, has relation-type; '
+                       'relation-type sub attribute, datatype string;')
+
+    insert_relation = (
+        'match '
+        '$x1 isa tag-mention, has mention-id $x1-id; '
+        '$x2 isa tag-mention, has mention-id $x2-id; '
+        '$x1-id != $x2-id;'
+        '$rel-tag isa tag-relation, has mention-id $x1-id, has mention-id $x2-id, has relation-type $type; '
+        'insert '
+        '$rel(links: $x1, links: $x2) isa relation-link, has relation-type $type;'
+    )
+
+    client = grakn.client.GraknClient(uri="localhost:48555")
+    session = client.session(keyspace="adr")
+
+    tx = session.transaction().write()
+    define_query = define_relation
+    tx.query(define_query)
+    tx.query(define_plays)
+    tx.commit()
+
+    for typ in types:
+        tx = session.transaction().write()
+        insert_query = insert_relation.format(typ)
+        print(insert_query)
+        tx.query(insert_query)
+        print('inserted')
+        tx.commit()
+
+    session.close()
+    client.close()
+
+
+def add_real():
+    drug_insert_query = (
+        'match '
+        '$l isa tag-label, has label-drug $dn;'
+        'insert '
+        '$d isa drug, has name $dn;'
+    )
+
+    adr_insert_query = (
+        ''
+        'insert '
+        '$r isa reaction, has severity $severity, has'
+    )
+
+
 """
 Query for 
 match 
 $label isa tag-label, has label-drug $drug;
 $section isa tag-section, has section-id $sec-id; $rsl($section, $label) isa tag-containment;
 $mention isa tag-mention, has section-id $sec-id, has mention-type $mt; $rml($mention, $label) isa tag-containment;
-get; offset 0; limit 8;
+get; offset 0; limit 1;
 """
 
 """
@@ -108,3 +166,4 @@ define transitive-tag-containment sub rule, when {(tag-container: $x1, tag-conta
 
 if __name__ == "__main__":
     main()
+    add_relations()
