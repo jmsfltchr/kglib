@@ -76,6 +76,25 @@ class TestMigratorInsertStatements(unittest.TestCase):
             'insert $x1 isa tag-label, has tag-attr-drug "adcetris", has tag-attr-track "TAC2017_ADR";', "x1", None)
         self.assertEqual(expected_inserts, inserts)
 
+    def test_tag_attribute_value_mapping(self):
+
+        migrator = xml.XMLMigrator(tag_mapping={'Label': 'tag-label'},
+                                   attr_tag_mapping={'Label': {'drug': 'tag-attr-drug', 'track': 'tag-attr-track'}},
+                                   tag_value_mapper=lambda x: x.replace("\"", "\\\"")
+                                   )
+
+        xml_content = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<Label drug="do stuff &quot; adcetris &quot; ok">'
+            '</Label>'
+        )
+
+        inserts = migrator.get_insert_statements(xml_content)
+        st = 'insert $x1 isa tag-label, has tag-attr-drug "do stuff \\\" adcetris \\\" ok";'
+        print(st)
+        expected_inserts = xml.QueryTree(st, "x1", None)
+        self.assertEqual(expected_inserts, inserts)
+
 
 class TestMigratorDefineStatements(unittest.TestCase):
 

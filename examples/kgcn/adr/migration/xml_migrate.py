@@ -23,10 +23,11 @@ import kglib.kgcn.core.ingest.traverse.data.context.utils as utils
 
 
 class XMLMigrator:
-    def __init__(self, tag_mapping, tag_containment=None, attr_tag_mapping=None):
+    def __init__(self, tag_mapping, tag_containment=None, attr_tag_mapping=None, tag_value_mapper=None):
         self._tag_containment = tag_containment
         self._tag_mapping = tag_mapping
         self._attr_tag_mapping = attr_tag_mapping
+        self._tag_value_mapper = tag_value_mapper
 
     def get_insert_statements(self, file_path):
         try:
@@ -42,6 +43,10 @@ class XMLMigrator:
                 # Add attributes to the query
                 for attr_name, value in element.attrib.items():
                     attr_type = self._attr_tag_mapping[element.tag][attr_name]
+
+                    if self._tag_value_mapper is not None:
+                        value = self._tag_value_mapper(value)
+
                     insert_query += f', has {attr_type} \"{value}\"'
 
             insert_query += ';'

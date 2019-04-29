@@ -16,6 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+import glob
 
 import grakn
 
@@ -46,7 +47,7 @@ def main():
                                            'Reaction': {'id': 'reaction-id', 'str': 'name'},
                                            'Normalization': {'id': 'normalization-id', 'meddra_pt': 'meddra_pt',
                                                              'meddra_pt_id': 'meddra_pt_id', 'meddra_llt': 'name',
-                                                             'meddra_llt_id': 'meddra_llt_id'}
+                                                             'meddra_llt_id': 'meddra_llt_id', 'flag': 'flag'}
 
                                        },
                                        tag_containment={'relation': 'tag-containment',
@@ -66,17 +67,20 @@ def main():
     tx.commit()
     executor = ex.QueryTreeExecutor(session)
 
-    xml = 'data/adrs/train_xml/ADCETRIS.xml'
-    insert_tree = migrator.get_insert_statements(xml)
+    # xml = 'data/adrs/train_xml/ADCETRIS.xml'
+    xmls = glob.glob('data/adrs/train_xml/*.xml')
+    for xml in xmls:
+        print(f'Inserting xml data from {xml}')
+        insert_tree = migrator.get_insert_statements(xml)
 
-    # def recursive_print(tree):
-    #     print(tree.query)
-    #     if tree.children:
-    #         for child in tree.children:
-    #             recursive_print(child)
-    # recursive_print(insert_tree)
+        # def recursive_print(tree):
+        #     print(tree.query)
+        #     if tree.children:
+        #         for child in tree.children:
+        #             recursive_print(child)
+        # recursive_print(insert_tree)
 
-    executor.insert(insert_tree)
+        executor.insert(insert_tree)
 
     session.close()
     client.close()
