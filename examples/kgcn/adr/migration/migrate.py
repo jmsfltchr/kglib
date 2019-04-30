@@ -145,6 +145,11 @@ def add_relations():
 
 
 def add_real():
+
+    client = grakn.client.GraknClient(uri="localhost:48555")
+    session = client.session(keyspace="adr")
+    tx = session.transaction().write()
+
     drug_insert_query = (
         'match '
         '$l isa tag-label, has label-drug $dn;'
@@ -192,32 +197,52 @@ def add_real():
         'insert (reaction-cause: $label, caused-reaction: $norm) isa reaction-causality;'
     )
 
-    mention_insert_query = (
+    mention_match_query = (
         'match $label isa tag-label, has label-drug $drug-name; '
         '$tc1($label, $reactions) isa tag-containment; '
         '$reactions isa tag-reactions;'
-        '$tc2($reactions, $reaction) isa tag-containment;' 
+        '$tc2($reactions, $reaction) isa tag-containment;'
         '$reaction isa tag-reaction;'
-        '$tc3($reaction, $norm) isa tag-containment;' 
+        '$tc3($reaction, $norm) isa tag-containment;'
         '$norm isa tag-normalization;\n'
-        
+
         '{$reaction has name $token;} or {$norm has name $token;};\n'
-        
+
         '$tc4($mentions, $label) isa tag-containment;'
         '$mentions isa tag-mentions;'
         '$tc5($mentions, $mention) isa tag-containment;'
         '$mention isa tag-mention, has name $token, has mention-type "AdverseReaction";\n'
-        
+
         '$tc6($mentions, $rel-mention) isa tag-containment;'
         '$lr($mention, $rel-mention) isa relation-link;'
-        '$rel-mention isa tag-mention, has name $value, has mention-type "Severity";\n'
-        
-        
+        '$rel-mention isa tag-mention, has name $value, has mention-type $rel-mention-type;\n'
+
+
         # Then add attributes to the existing relation
         '$rc(reaction-cause: $label, caused-reaction: $norm) isa reaction-causality;'
+        'get;'
         # 'insert $rc has severity $value;'
-        'insert $s isa severity; $s == $value; (@has-severity-owner: $rc, @has-severity-value: $s) isa @has-severity;'  # This instead of the line above to avoid a bug
+        # 'insert $s isa severity; $s == $value; (@has-severity-owner: $rc, @has-severity-value: $s) isa @has-severity;'  # This instead of the line above to avoid a bug
     )
+
+    answer_iterator = tx.query(mention_match_query)
+    severity_type = tx.get_schema_concept("severity")
+
+    for i, concept_map in enumerate(answer_iterator):
+        print(f'Processing answer {i}')
+        mt = concept_map.map().get("rel-mention-type").value()
+        rc = concept_map.map().get("rc")
+
+        if mt == "Severity":
+            severity = severity_type.create(mt)
+            rc.has(severity)
+
+        if i > 10:
+            break
+
+    tx.commit()
+    session.close()
+    client.close()
 
 
 
@@ -281,6 +306,8 @@ get; offset 0; limit 5;
 """
 
 if __name__ == "__main__":
-    main()
-    print("adding relations")
-    add_relations()
+    # main()
+    # print("adding relations")
+    # add_relations()
+    print("adding real")
+    add_real()
