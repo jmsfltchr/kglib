@@ -45,14 +45,15 @@ def main():
                                            'Relation': {'id': 'relation-id', 'type': 'relation-type',
                                                         'arg1': 'mention-id-1', 'arg2': 'mention-id-2'},
                                            'Reaction': {'id': 'reaction-id', 'str': 'name'},
-                                           'Normalization': {'id': 'normalization-id', 'meddra_pt': 'meddra_pt',
-                                                             'meddra_pt_id': 'meddra_pt_id', 'meddra_llt': 'name',
-                                                             'meddra_llt_id': 'meddra_llt_id', 'flag': 'flag'}
+                                           'Normalization': {'id': 'normalization-id', 'meddra_pt': 'meddra-pt',
+                                                             'meddra_pt_id': 'meddra-pt-id', 'meddra_llt': 'meddra-llt',
+                                                             'meddra_llt_id': 'meddra-llt-id', 'flag': 'flag'}
 
                                        },
                                        tag_containment={'relation': 'tag-containment',
                                                         'container_role': 'tag-container',
-                                                        'containee_role': 'tag-containee'}
+                                                        'containee_role': 'tag-containee'},
+                                       tag_value_mapper=lambda x: x.replace("\"", "\\\"")
                                        )
 
     define_statements = migrator.get_define_statements()
@@ -67,20 +68,15 @@ def main():
     tx.commit()
     executor = ex.QueryTreeExecutor(session)
 
-    # xml = 'data/adrs/train_xml/ADCETRIS.xml'
-    xmls = glob.glob('data/adrs/train_xml/*.xml')
-    for xml in xmls:
-        print(f'Inserting xml data from {xml}')
-        insert_tree = migrator.get_insert_statements(xml)
-
-        # def recursive_print(tree):
-        #     print(tree.query)
-        #     if tree.children:
-        #         for child in tree.children:
-        #             recursive_print(child)
-        # recursive_print(insert_tree)
-
-        executor.insert(insert_tree)
+    xml = 'data/adrs/train_xml/ADCETRIS.xml'
+    insert_tree = migrator.get_insert_statements(xml)
+    executor.insert(insert_tree)
+    # xmls = glob.glob('data/adrs/train_xml/*.xml')
+    # for xml in xmls:
+    #     print('=============================================')
+    #     print(f'Inserting xml data from {xml}')
+    #     insert_tree = migrator.get_insert_statements(xml)
+    #     executor.insert(insert_tree)
 
     session.close()
     client.close()
@@ -98,6 +94,7 @@ def add_relations():
                        'relation-type sub attribute, datatype string;')
 
     define_attribute_hierarchy = 'define mention-id-1 sub mention-id; mention-id-2 sub mention-id;'
+    define_meddra_terms_are_names = 'define meddra-pt sub name; meddra-llt sub name;'
 
     # insert_relation = (
     #     'match '
@@ -111,6 +108,10 @@ def add_relations():
 
     insert_relation = (
         'match '
+        '$label isa tag-label, has label-drug $drug-name; '
+        '$tc1($label, $x1) isa tag-containment; '
+        '$tc2($label, $x2) isa tag-containment; '
+        '$tc1($label, $rel-tag) isa tag-containment; '
         '$x1 isa tag-mention, has mention-id $x1-id; '
         '$x2 isa tag-mention, has mention-id $x2-id; '
         '$x1-id-1 == $x1-id; '
@@ -129,6 +130,7 @@ def add_relations():
     tx.query(define_relation)
     tx.query(define_plays)
     tx.query(define_attribute_hierarchy)
+    tx.query(define_meddra_terms_are_names)
     tx.commit()
 
     tx = session.transaction().write()
@@ -150,11 +152,75 @@ def add_real():
         '$d isa drug, has name $dn;'
     )
 
-    adr_insert_query = (
-        ''
-        'insert '
-        '$r isa reaction, has severity $severity, has'
+    # adr_define_query = (
+    #     'define '
+    #     'condition sub entity, has normalization-id, has meddra-pt, has meddra-pt-id, has meddra-llt, '
+    #     'has meddra-llt-id, has flag;'
+    # )
+
+    condition_insert_query = (
+        'match $n isa tag-normalization, has meddra-pt-id $id; insert $c isa condition, has meddra-pt-id $id;'
+    )  # hits a bug
+
+    condition_insert_query = (
+        'match $n isa tag-normalization, has meddra-pt-id $id, has attribute $a; $c isa condition, has meddra-pt-id $id;'
+        'insert $c has attribute $a;'
+    )  # hits a bug hard
+
+    # for concept_map in results:
+    #     normalization = concept_map.map().get('$n')
+    #     attrs = normalization.attributes()
+    #     condition = next(tx.query('insert $c isa condition;'))
+    #     for attr in attrs:
+
+    define_causality = (
+        'define '
+        'reaction-causality sub relation, relates reaction-cause, relates caused-reaction, has severity;'
+        'severity sub attribute, datatype string;'
+        'tag-label plays reaction-cause; '
+        'tag-normalization plays caused-reaction;'
     )
+
+    causality_insert_query = (
+        'match $label isa tag-label, has label-drug $drug-name;'
+        '$tc1($label, $reactions) isa tag-containment;'
+        '$reactions isa tag-reactions;'
+        '$tc2($reactions, $reaction) isa tag-containment;'
+        '$reaction isa tag-reaction;'
+        '$tc3($reaction, $norm) isa tag-containment;'
+        '$norm isa tag-normalization;'
+        'insert (reaction-cause: $label, caused-reaction: $norm) isa reaction-causality;'
+    )
+
+    mention_insert_query = (
+        'match $label isa tag-label, has label-drug $drug-name; '
+        '$tc1($label, $reactions) isa tag-containment; '
+        '$reactions isa tag-reactions;'
+        '$tc2($reactions, $reaction) isa tag-containment;' 
+        '$reaction isa tag-reaction;'
+        '$tc3($reaction, $norm) isa tag-containment;' 
+        '$norm isa tag-normalization;\n'
+        
+        '{$reaction has name $token;} or {$norm has name $token;};\n'
+        
+        '$tc4($mentions, $label) isa tag-containment;'
+        '$mentions isa tag-mentions;'
+        '$tc5($mentions, $mention) isa tag-containment;'
+        '$mention isa tag-mention, has name $token, has mention-type "AdverseReaction";\n'
+        
+        '$tc6($mentions, $rel-mention) isa tag-containment;'
+        '$lr($mention, $rel-mention) isa relation-link;'
+        '$rel-mention isa tag-mention, has name $value, has mention-type "Severity";\n'
+        
+        
+        # Then add attributes to the existing relation
+        '$rc(reaction-cause: $label, caused-reaction: $norm) isa reaction-causality;'
+        # 'insert $rc has severity $value;'
+        'insert $s isa severity; $s == $value; (@has-severity-owner: $rc, @has-severity-value: $s) isa @has-severity;'  # This instead of the line above to avoid a bug
+    )
+
+
+
 """
 Check the kinds of connections made by relation-links
 match $rl(link-dest:$d, link-source:$s)isa relation-link, has relation-type $rt; $d has mention-type $dmt; $s has mention-type $smt; get $dmt, $smt, $rt;
@@ -182,6 +248,36 @@ when {
 
 """
 define transitive-tag-containment sub rule, when {(tag-container: $x1, tag-containee: $x2) isa tag-containment; (tag-container: $x2, tag-containee: $x3) isa tag-containment;}, then {(tag-container: $x1, tag-containee: $x3) isa tag-containment;};
+"""
+
+"""
+Link a drug to the normalized names of ADRs it's related to 
+match $label isa tag-label, has label-drug $drug-name; 
+$tc1($label, $reactions) isa tag-containment; 
+$reactions isa tag-reactions;
+$tc2($reactions, $reaction) isa tag-containment; 
+$reaction isa tag-reaction, has name $token;
+$tc3($reaction, $norm) isa tag-containment; 
+$norm isa tag-normalization, has meddra_pt $md; get $drug-name, $md; offset 0; limit 5;
+
+---
+
+match $label isa tag-label, has label-drug $drug-name; 
+$tc1($label, $reactions) isa tag-containment; 
+$reactions isa tag-reactions;
+$tc2($reactions, $reaction) isa tag-containment; 
+$reaction isa tag-reaction;
+$tc3($reaction, $norm) isa tag-containment; 
+$norm isa tag-normalization;
+
+{$reaction has name $token;} or {$norm has name $token;};
+
+$tc4($mentions, $label) isa tag-containment;
+$mentions isa tag-mentions;
+$tc5($mentions, $mention) isa tag-containment;
+$mention isa tag-mention, has name $token;
+get; offset 0; limit 5;
+
 """
 
 if __name__ == "__main__":
