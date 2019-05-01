@@ -108,16 +108,12 @@ def add_relations():
 
     insert_relation = (
         'match '
-        '$label isa tag-label, has label-drug $drug-name; '
-        '$tc1($label, $x1) isa tag-containment; '
-        '$tc2($label, $x2) isa tag-containment; '
-        '$tc1($label, $rel-tag) isa tag-containment; '
         '$x1 isa tag-mention, has mention-id $x1-id; '
         '$x2 isa tag-mention, has mention-id $x2-id; '
         '$x1-id-1 == $x1-id; '
         '$x2-id-2 == $x2-id; '
         '$x1-id != $x2-id; '
-        '$rel-tag isa tag-relation, has mention-id-1 $x1-id-1, has mention-id-2 $x2-id-2, has relation-type $type; '
+        '$rel-tag isa tag-relation, has mention-id-1 $x1-id-1, has mention-id-2 $x2-id-2, has relation-type $type; \n'
         'insert '
         '$rel(link-source: $x1, link-dest: $x2) isa relation-link; '
         '(@has-relation-type-value: $type, @has-relation-type-owner: $rel) isa @has-relation-type;'
@@ -186,6 +182,22 @@ def add_real():
         'tag-normalization plays caused-reaction;'
     )
 
+    define_containment_rule = (
+        'define '
+        'transitive-tag-containment sub rule,'
+        'when {'
+        '(tag-container: $x1, tag-containee: $x2) isa tag-containment;'
+        '(tag-container: $x2, tag-containee: $x3) isa tag-containment;'
+        '}, then {'
+        '(tag-container: $x1, tag-containee: $x3) isa tag-containment;'
+        '};'
+    )
+
+    tx.query(define_causality)
+    tx.query(define_containment_rule)
+    tx.commit()
+    tx = session.transaction().write()
+
     causality_insert_query = (
         'match $label isa tag-label, has label-drug $drug-name;'
         '$tc1($label, $reactions) isa tag-containment;'
@@ -196,6 +208,9 @@ def add_real():
         '$norm isa tag-normalization;'
         'insert (reaction-cause: $label, caused-reaction: $norm) isa reaction-causality;'
     )
+    tx.query(causality_insert_query)
+    tx.commit()
+    tx = session.transaction().write()
 
     mention_match_query = (
         'match $label isa tag-label, has label-drug $drug-name; '
@@ -217,7 +232,6 @@ def add_real():
         '$lr($mention, $rel-mention) isa relation-link;'
         '$rel-mention isa tag-mention, has name $value, has mention-type $rel-mention-type;\n'
 
-
         # Then add attributes to the existing relation
         '$rc(reaction-cause: $label, caused-reaction: $norm) isa reaction-causality;'
         'get;'
@@ -225,20 +239,20 @@ def add_real():
         # 'insert $s isa severity; $s == $value; (@has-severity-owner: $rc, @has-severity-value: $s) isa @has-severity;'  # This instead of the line above to avoid a bug
     )
 
-    answer_iterator = tx.query(mention_match_query)
-    severity_type = tx.get_schema_concept("severity")
-
-    for i, concept_map in enumerate(answer_iterator):
-        print(f'Processing answer {i}')
-        mt = concept_map.map().get("rel-mention-type").value()
-        rc = concept_map.map().get("rc")
-
-        if mt == "Severity":
-            severity = severity_type.create(mt)
-            rc.has(severity)
-
-        if i > 10:
-            break
+    # answer_iterator = tx.query(mention_match_query)
+    # severity_type = tx.get_schema_concept("severity")
+    #
+    # for i, concept_map in enumerate(answer_iterator):
+    #     print(f'Processing answer {i}')
+    #     mt = concept_map.map().get("rel-mention-type").value()
+    #     rc = concept_map.map().get("rc")
+    #
+    #     if mt == "Severity":
+    #         severity = severity_type.create(mt)
+    #         rc.has(severity)
+    #
+    #     if i > 10:
+    #         break
 
     tx.commit()
     session.close()
@@ -306,8 +320,8 @@ get; offset 0; limit 5;
 """
 
 if __name__ == "__main__":
-    # main()
-    # print("adding relations")
-    # add_relations()
+    main()
+    print("adding relations")
+    add_relations()
     print("adding real")
     add_real()
