@@ -339,6 +339,64 @@ class TestFillingArrays(unittest.TestCase):
         filled_arrays = array.fill_arrays_at_all_depths(initialised_arrays, batch_values)
         np.testing.assert_equal(filled_arrays, expected_filled_arrays)
 
+    def test_array_filled_as_expected_for_batch_2_hop(self):
+
+        initialised_arrays = [
+            {
+                'neighbour_type': np.full((2, 3, 2, 1), fill_value='', dtype=np.dtype('U50')),
+            },
+            {
+                'neighbour_type': np.full((2, 2, 1), fill_value='', dtype=np.dtype('U50')),
+            },
+            {
+                'neighbour_type': np.full((2, 1), fill_value='', dtype=np.dtype('U50')),
+            }
+        ]
+
+        batch_values = {
+            0: {
+                (0, 0, 0): {'neighbour_type': "a"},
+                (0, 1, 0): {'neighbour_type': "a"},
+                (0, 2, 0): {'neighbour_type': "a"},
+                (0, 0, 1): {'neighbour_type': "a"},
+                (0, 1, 1): {'neighbour_type': "a"},
+                (0, 2, 1): {'neighbour_type': "a"},
+                (1, 0, 0): {'neighbour_type': "a"},
+                (1, 1, 0): {'neighbour_type': "a"},
+                (1, 2, 0): {'neighbour_type': "a"},
+                (1, 0, 1): {'neighbour_type': "a"},
+                (1, 1, 1): {'neighbour_type': "a"},
+                (1, 2, 1): {'neighbour_type': "a"},
+                },
+            1: {(0, 0,): {'neighbour_type': "name"},
+                (0, 1,): {'neighbour_type': "employment"},
+                (1, 0,): {'neighbour_type': "name"},
+                (1, 1,): {'neighbour_type': "employment"},
+                },
+            2: {(0,): {'neighbour_type': "person"},
+                (1,): {'neighbour_type': "person"},
+                }
+
+        }
+
+        expected_filled_arrays = [
+            {
+                'neighbour_type': np.array([[[['a'], ['a']], [['a'], ['a']], [['a'], ['a']]],
+                                            [[['a'], ['a']], [['a'], ['a']], [['a'], ['a']]]], dtype=np.dtype('U50')),
+            },
+            {
+                'neighbour_type': np.array([[['name'], ['employment']],
+                                            [['name'], ['employment']]], dtype=np.dtype('U50')),
+            },
+            {
+                'neighbour_type': np.array([['person'],
+                                            ['person']], dtype=np.dtype('U50')),
+            }
+        ]
+
+        filled_arrays = array.fill_arrays_at_all_depths(initialised_arrays, batch_values)
+        np.testing.assert_equal(filled_arrays, expected_filled_arrays)
+
 
 if __name__ == "__main__":
     unittest.main()
