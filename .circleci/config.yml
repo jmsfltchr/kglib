@@ -93,6 +93,12 @@ jobs:
           export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
           bazel run //:deploy-pip -- release
 
+  release-cleanup:
+    machine: true
+    steps:
+      - checkout
+      - run: git push --delete origin kglib-release-branch
+
 workflows:
   kglib:
     jobs:
@@ -117,7 +123,5 @@ workflows:
           requires:
             - deploy-approval
       - release-cleanup:
-          machine: true
-          steps:
-            - checkout
-            - run: git push --delete origin kglib-release-branch
+          requires:
+            - deploy-pip-release
