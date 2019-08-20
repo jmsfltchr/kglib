@@ -122,7 +122,7 @@ workflows:
           type: approval
           filters:
             branches:
-            only: kglib-release-branch
+              only: kglib-release-branch
           requires:
             - deploy-git
       - deploy-pip-release:
