@@ -61,8 +61,8 @@ jobs:
     steps:
       - install-bazel-linux-rbe
       - checkout
-#      - run: pyenv install 3.6.3
-#      - run: pyenv global 3.6.3
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
