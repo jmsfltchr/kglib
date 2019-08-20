@@ -114,14 +114,26 @@ workflows:
             - test-deployment-pip
   kglib-release:
     jobs:
-      - deploy-git
+      - deploy-git:
+          filters:
+            branches:
+              only: kglib-release-branch
       - deploy-approval:
           type: approval
+          filters:
+            branches:
+            only: kglib-release-branch
           requires:
             - deploy-git
       - deploy-pip-release:
+          filters:
+            branches:
+              only: kglib-release-branch
           requires:
             - deploy-approval
       - release-cleanup:
+          filters:
+            branches:
+              only: kglib-release-branch
           requires:
             - deploy-pip-release
