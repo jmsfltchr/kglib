@@ -14,8 +14,9 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
-      - install-bazel-linux-rbe
-      - checkout
+      - run: echo "Hello"
+#      - install-bazel-linux-rbe
+#      - checkout
 #      - run: pyenv install 3.6.3
 #      - run: pyenv global 3.6.3
 #      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
@@ -24,8 +25,9 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
-      - install-bazel-linux-rbe
-      - checkout
+      - run: echo "Hello"
+#      - install-bazel-linux-rbe
+#      - checkout
 #      - run: pyenv install 3.6.3
 #      - run: pyenv global 3.6.3
 #      - run: |
@@ -38,7 +40,8 @@ jobs:
       machine: true
       working_directory: ~/kglib
       steps:
-        - checkout
+        - run: echo "Hello"
+#        - checkout
 #        - run: pyenv install 3.6.3
 #        - run: pyenv global 3.6.3
 #        - run: wget https://storage.googleapis.com/kglib/grakn-core-all-mac-animaltrade1.5.3.zip
@@ -58,6 +61,8 @@ jobs:
     steps:
       - install-bazel-linux-rbe
       - checkout
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
