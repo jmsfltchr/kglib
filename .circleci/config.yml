@@ -53,6 +53,16 @@ jobs:
               pip install -r test/deployment/requirements.txt
               python -m unittest examples.kgcn.animal_trade.test.end_to_end_test
 
+  release-approval:
+    machine: true
+    steps:
+      - install-bazel-linux-rbe
+      - checkout
+      - run: |
+          export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
+          export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
+          bazel run @graknlabs_build_tools//ci:release-approval
+
   deploy-git:
     machine: true
     working_directory: ~/kglib
@@ -60,6 +70,10 @@ jobs:
       - checkout
       - run: wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
       - run: tar xvf ghr_v0.12.0_linux_386.tar.gz
+      - run: |
+          pip install certifi
+          export RELEASE_NOTES_TOKEN=$REPO_GITHUB_TOKEN
+          bazel run @graknlabs_build_tools//ci:release-notes -- grakn $(cat VERSION) ./RELEASE_TEMPLATE.md
       - run:
          name: "Publish Draft Release on GitHub"
          command: |
@@ -80,7 +94,6 @@ jobs:
           bazel run //:deploy-pip -- release
 
 workflows:
-  version: 2
   kglib:
     jobs:
       - test
@@ -90,17 +103,21 @@ workflows:
       - test-deployment-pip:
           requires:
             - deploy-pip-snapshot
-      - approve-deploy-git:
-          type: approval
+      - release-approval:
           requires:
             - test-deployment-pip
-      - deploy-git:
-          requires:
-            - approve-deploy-git
-      - approve-deploy-pip-release:
+  kglib-release:
+    jobs:
+      - deploy-git
+      - deploy-approval:
           type: approval
           requires:
             - deploy-git
       - deploy-pip-release:
           requires:
-            - approve-deploy-pip-release
+            - deploy-approval
+      - release-cleanup:
+          machine: true
+          steps:
+            - checkout
+            - run: git push --delete origin kglib-release-branch
