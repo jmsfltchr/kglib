@@ -16,7 +16,7 @@ load("//dependencies/python:dependencies.bzl", "io_bazel_rules_python")
 io_bazel_rules_python()
 
 ## Only needed for PIP support:
-load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip3_import")
+load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip3_import", "pip_import")
 pip_repositories()
 
 
@@ -125,7 +125,7 @@ sonarcloud_dependencies()
 load("@graknlabs_build_tools//bazel:dependencies.bzl", "bazel_rules_python")
 bazel_rules_python()
 
-pip3_import(
+pip_import(
     name = "graknlabs_build_tools_ci_pip",
     requirements = "@graknlabs_build_tools//ci:requirements.txt",
 )
