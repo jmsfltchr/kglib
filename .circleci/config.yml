@@ -56,8 +56,8 @@ jobs:
   release-approval:
     machine: true
     steps:
-      - bazel_install
       - checkout
+      - bazel_install
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
