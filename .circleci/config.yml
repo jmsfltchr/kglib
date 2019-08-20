@@ -56,7 +56,7 @@ jobs:
   release-approval:
     machine: true
     steps:
-      - install-bazel-linux-rbe
+      - bazel_install
       - checkout
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
