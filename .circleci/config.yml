@@ -1,21 +1,21 @@
 version: 2.1
 commands:
-  bazel_install:
+  install-bazel-linux-rbe:
     steps:
-      - run:
-          name: Bazel - Install
-          command: |
-            curl -OL https://github.com/bazelbuild/bazel/releases/download/0.25.2/bazel-0.25.2-installer-linux-x86_64.sh
-            chmod +x bazel-0.25.2-installer-linux-x86_64.sh
-            sudo ./bazel-0.25.2-installer-linux-x86_64.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/apt-wait.sh
+      - run: bash ./apt-wait.sh && rm ./apt-wait.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/install-bazel-linux.sh
+      - run: bash ./install-bazel-linux.sh && rm ./install-bazel-linux.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/install-bazel-rbe.sh
+      - run: bash ./install-bazel-rbe.sh && rm ./install-bazel-rbe.sh
 
 jobs:
   test:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-#      - bazel_install
 #      - run: pyenv install 3.6.3
 #      - run: pyenv global 3.6.3
 #      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
@@ -24,23 +24,23 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
-      - run: |
-          echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
-          export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
-          export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
-          bazel run //:deploy-pip -- snapshot
+#      - run: pyenv install 3.6.3
+#      - run: pyenv global 3.6.3
+#      - run: |
+#          echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
+#          export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
+#          export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
+#          bazel run //:deploy-pip -- snapshot
 
   test-deployment-pip:
       machine: true
       working_directory: ~/kglib
       steps:
         - checkout
-        - run: pyenv install 3.6.3
-        - run: pyenv global 3.6.3
+#        - run: pyenv install 3.6.3
+#        - run: pyenv global 3.6.3
 #        - run: wget https://storage.googleapis.com/kglib/grakn-core-all-mac-animaltrade1.5.3.zip
 #        - run: unzip grakn-core-all-mac-animaltrade1.5.3.zip
 #        - run: nohup grakn-core-all-mac-animaltrade1.5.3/grakn server start
@@ -56,8 +56,8 @@ jobs:
   release-approval:
     machine: true
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
@@ -84,8 +84,8 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
 #      - run: |
