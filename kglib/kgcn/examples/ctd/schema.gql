@@ -1,0 +1,67 @@
+define
+
+chemical-gene-interaction sub relation,
+    relates interacting-gene,
+    relates interacting-chemical,
+    relates data-source,
+    has degree;
+
+pmid sub attribute,
+    datatype long;
+
+degree sub attribute,
+    datatype string;  # TODO Add regex
+
+identifier sub attribute,
+    datatype string;
+
+chemical sub entity,
+    key identifier,
+    plays interacting-chemical;
+
+gene sub entity,
+    key identifier,
+    plays interacting-gene;
+
+pubmed-citation sub entity,
+    key pmid,
+    plays data-source;
+
+#identifier sub attribute,
+#  datatype string;
+#
+#disease sub entity,
+#    has identifier;
+#
+#
+## chemical-disease interaction types:
+#
+#chemical-disease-interaction sub relation,
+#    relates interacting-chemical,
+#    relates interacting-disease;
+#
+#abundance sub chemical-disease-interaction;
+## The abundance of a chemical (if chemical synthesis is not known).
+#
+#activity sub chemical-disease-interaction;
+## An elemental function of a molecule.
+#
+#binding sub cdi;
+## A molecular interaction.
+#
+#cotreatment sub cdi;
+## Involving the use of two or more chemicals simultaneously.
+#
+#expression sub cdi;
+## The expression of a gene product.
+#
+#folding,fol,The bending and positioning of a molecule to achieve conformational integrity.,
+#localization,loc,Part of the cell where a molecule resides.,
+#metabolic processing,met,"The biochemical alteration of a molecule's structure (does not include changes in expression, stability, folding, localization, splicing, or transport).",
+#acetylation,ace,The addition of an acetyl group.,met
+#acylation,acy,The addition of an acyl group.,met
+#alkylation,alk,The addition of an alkyl group.,met
+#amination,ami,The addition of an amine group.,met
+#carbamoylation,car,The addition of a carbamoyl group.,met
+#carboxylation,cox,The addition of a carboxyl group.,met
+#chemical synthesis,csy,A biochemical event resulting in a new chemical product.,met
