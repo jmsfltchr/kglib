@@ -24,17 +24,22 @@ identifier sub attribute,
 text sub attribute,
     datatype string;
 
+name sub attribute,
+    datatype string;
+
 chemical sub entity,
     key identifier,
 #    plays interacting-chemical;
     plays from-actor,
-    plays to-actor;
+    plays to-actor,
+    has name;
 
 gene sub entity,
     key identifier,
 #    plays interacting-gene;
     plays from-actor,
-    plays to-actor;
+    plays to-actor,
+    has name;
 
 pubmed-citation sub entity,
     key pmid,

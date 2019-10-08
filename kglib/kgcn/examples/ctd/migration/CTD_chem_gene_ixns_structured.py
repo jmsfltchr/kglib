@@ -23,28 +23,38 @@ from kglib.kgcn.examples.ctd.migration.utils import parse_xml_to_tree_line_by_li
 from kglib.kgcn.examples.ctd.migration.type_codes import type_codes
 
 
-def exists_or_insert(tx, type, type_key, key_value):
-    pm_query = f'match $x isa {type}, has {type_key} {key_value}; get;'
-    results = list(tx.query(pm_query))
+def exists_or_insert(tx, type, keys_dict):
+    pm_query = f'$x isa {type}'
+
+    for type_key, key_value in keys_dict.items():
+        pm_query += f', has {type_key} {key_value}'
+
+    pm_query += ';'
+    results = list(tx.query('match ' + pm_query + ' get;'))
     if len(results) == 0:
-        tx.query(f'insert $x isa {type}, has {type_key} {key_value};')
+        tx.query('insert ' + pm_query)
 
 
 class Chemical:
-    def __init__(self, tx, identifier, index):
+    def __init__(self, tx, identifier, name, index):
+        self.name = name
         self.identifier = identifier
         self.index = index
         self.var = f'chem{self.index}'
-        exists_or_insert(tx, 'chemical', 'identifier', identifier)
+
+        keys = {'identifier': identifier, 'name': f'"{name}"'}
+        exists_or_insert(tx, 'chemical', keys)
         self.match_statement = f'${self.var} isa chemical, has identifier {self.identifier};'
 
 
 class Gene:
-    def __init__(self, tx, identifier, index):
+    def __init__(self, tx, identifier, name, index):
+        self.name = name
         self.identifier = identifier
         self.index = index
         self.var = f'gene{self.index}'
-        exists_or_insert(tx, 'gene', 'identifier', identifier)
+        keys = {'identifier': identifier, 'name': f'"{name}"'}
+        exists_or_insert(tx, 'gene', keys)
         self.match_statement = f'${self.var} isa gene, has identifier {self.identifier};'
 
 
@@ -96,41 +106,42 @@ def recurse(tx, root, base_index):
 
     interaction_id = root.attrib['id']
 
-    for i, child in enumerate(root):
+    for i, node in enumerate(root):
         index = str(base_index) + str(i)
-        print(child.tag, child.attrib)
+        print(node.tag, node.attrib)
 
-        if child.tag == 'reference':
-            pmid = child.attrib['pmid']
+        if node.tag == 'reference':
+            pmid = node.attrib['pmid']
             pmids.append(pmid)
-            exists_or_insert(tx, 'pubmed-citation', 'pmid', int(pmid))
+            keys = {'pmid': int(pmid)}
+            exists_or_insert(tx, 'pubmed-citation', keys)
 
-        elif child.tag == 'axn':
-            type_code = child.attrib['code']
+        elif node.tag == 'axn':
+            type_code = node.attrib['code']
             relation_type = type_codes[type_code]
             # '+' (increases), '-' (decreases), '1' (affects) or '0' (does not affect).
-            degreecode = f"'{child.attrib['degreecode']}'"
+            degreecode = f"'{node.attrib['degreecode']}'"
 
             # interaction = Interaction(relation_type, degreecode)
-            interaction = Interaction(tx, interaction_id, index, relation_type, degreecode, child.text, pmids)
+            interaction = Interaction(tx, interaction_id, index, relation_type, degreecode, node.text, pmids)
 
             # TODO Add a switch statement to translate the code to words (or don't bother)
 
-        elif child.tag == 'actor':
-            type = child.attrib['type']  # 'gene' or 'chemical'
-            identifier = f'"{child.attrib["id"]}"'
-            position = child.attrib['position']  # 1 or 2
+        elif node.tag == 'actor':
+            type = node.attrib['type']  # 'gene' or 'chemical'
+            identifier = f'"{node.attrib["id"]}"'
+            position = node.attrib['position']  # 1 or 2
 
             if type == 'gene':
                 # form = child.attrib['form'] # Sometimes present, either 'gene', 'protein', 'mRNA'
                 # seqid = child.attrib['seqid']  # Only present sometimes
-                actor = Gene(tx, identifier, index)
+                actor = Gene(tx, identifier, node.text, index)
 
             elif type == 'chemical':
-                actor = Chemical(tx, identifier, index)
+                actor = Chemical(tx, identifier, node.text, index)
 
             elif type == 'ixn':
-                actor = recurse(tx, child, index)
+                actor = recurse(tx, node, index)
             else:
                 raise ValueError(f'Something not a gene nor a chemical nor an interaction was found, a {type}')
 
@@ -139,9 +150,9 @@ def recurse(tx, root, base_index):
             else:
                 actor2 = actor
 
-        # query = interaction.match_insert(actor1, actor2)
     interaction.add_actors(actor1, actor2)
     interaction.match_insert(actor1, actor2)
+    return interaction
 
 
 def migrate_chemical_gene_interactions(session, data_path):
