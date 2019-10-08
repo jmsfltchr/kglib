@@ -106,6 +106,8 @@ def recurse(tx, root, base_index):
 
     interaction_id = root.attrib['id']
 
+    degree_values = {'+': 'increases', '-': 'decreases', '1': 'affects', '0': 'does not affect'}
+
     for i, node in enumerate(root):
         index = str(base_index) + str(i)
         print(node.tag, node.attrib)
@@ -119,11 +121,10 @@ def recurse(tx, root, base_index):
         elif node.tag == 'axn':
             type_code = node.attrib['code']
             relation_type = type_codes[type_code]
-            # '+' (increases), '-' (decreases), '1' (affects) or '0' (does not affect).
-            degreecode = f"'{node.attrib['degreecode']}'"
+            degreecode = node.attrib['degreecode']
+            degree = f"'{degree_values[degreecode]}'"
 
-            # interaction = Interaction(relation_type, degreecode)
-            interaction = Interaction(tx, interaction_id, index, relation_type, degreecode, node.text, pmids)
+            interaction = Interaction(tx, interaction_id, index, relation_type, degree, node.text, pmids)
 
             # TODO Add a switch statement to translate the code to words (or don't bother)
 
