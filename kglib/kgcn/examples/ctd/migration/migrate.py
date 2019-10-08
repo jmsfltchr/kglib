@@ -16,6 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+import time
 
 from grakn.client import GraknClient
 
@@ -38,6 +39,7 @@ inputs = [
 
 
 def migrate():
+    start_time = time.time()
     keyspace = "ctd"
     uri = "localhost:48555"
 
@@ -47,6 +49,9 @@ def migrate():
         for ip in inputs:
 
             ip["template"](session, ip["data_path"])
+
+    elapsed = time.time() - start_time
+    print(f'Time elapsed {elapsed:.1f} seconds')
 
 
 if __name__ == "__main__":
