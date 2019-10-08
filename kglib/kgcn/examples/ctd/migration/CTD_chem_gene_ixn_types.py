@@ -20,15 +20,16 @@
 """
 Migrate chemical-gene interaction types
 """
+from inspect import cleandoc
 
 from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries
 
 
 def construct_query(type_name, parent_type):
-    return f'''define {type_name} sub {parent_type},
-               relates interacting-gene,
-               relates interacting-chemical,
-               relates data-source;'''
+    return cleandoc(f'''define {type_name} sub {parent_type},
+               relates from-actor,
+               relates to-actor,
+               relates data-source;''')
 
 
 def migrate_chemical_gene_interaction_types(session, data_path):
