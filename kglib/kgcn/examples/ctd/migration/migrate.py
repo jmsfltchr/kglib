@@ -24,6 +24,8 @@ from grakn.client import GraknClient
 from kglib.kgcn.examples.ctd.migration.CTD_chem_gene_ixn_types import migrate_chemical_gene_interaction_types
 from kglib.kgcn.examples.ctd.migration.CTD_chem_gene_ixns_structured import migrate_chemical_gene_interactions
 from kglib.kgcn.examples.ctd.migration.CTD_diseases import migrate_diseases
+from kglib.kgcn.examples.ctd.migration.CTD_genes import migrate_genes
+from kglib.kgcn.examples.ctd.migration.CTD_genes_diseases import migrate_genes_diseases
 
 inputs = [
     # {
@@ -34,10 +36,18 @@ inputs = [
     #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixns_structured_snippet.xml",
     #     "template": migrate_chemical_gene_interactions,
     # },
+    # {
+    #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_diseases_snippet.csv",
+    #     "template": migrate_diseases,
+    # },
     {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_diseases_snippet.csv",
-        "template": migrate_diseases,
+        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_genes_snippet.csv",
+        "template": migrate_genes,
     },
+    # {
+    #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_genes_diseases_snippet.csv",
+    #     "template": migrate_genes_diseases,
+    # },
 ]
 
 KEYSPACE = "ctd"

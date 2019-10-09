@@ -25,6 +25,9 @@ text sub attribute,
 name sub attribute,
     datatype string;
 
+symbol sub attribute,
+    datatype string;
+
 definition sub attribute,
     datatype string;
 
@@ -38,7 +41,8 @@ gene sub entity,
     key identifier,
     plays from-actor,
     plays to-actor,
-    has name;
+    has name,
+    has symbol;
 
 disease sub entity,
     key identifier,
