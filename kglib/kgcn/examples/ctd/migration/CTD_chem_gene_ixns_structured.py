@@ -19,20 +19,8 @@
 
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_xml_to_tree_line_by_line
+from kglib.kgcn.examples.ctd.migration.utils import parse_xml_to_tree_line_by_line, put_by_keys
 from kglib.kgcn.examples.ctd.migration.type_codes import type_codes
-
-
-def exists_or_insert(tx, type, keys_dict):
-    pm_query = f'$x isa {type}'
-
-    for type_key, key_value in keys_dict.items():
-        pm_query += f', has {type_key} {key_value}'
-
-    pm_query += ';'
-    results = list(tx.query('match ' + pm_query + ' get;'))
-    if len(results) == 0:
-        tx.query('insert ' + pm_query)
 
 
 class Chemical:
@@ -43,7 +31,7 @@ class Chemical:
         self.var = f'chem{self.index}'
 
         keys = {'identifier': identifier, 'name': f'"{name}"'}
-        exists_or_insert(tx, 'chemical', keys)
+        put_by_keys(tx, 'chemical', keys)
         self.match_statement = f'${self.var} isa chemical, has identifier {self.identifier};'
 
 
@@ -54,7 +42,7 @@ class Gene:
         self.index = index
         self.var = f'gene{self.index}'
         keys = {'identifier': identifier, 'name': f'"{name}"'}
-        exists_or_insert(tx, 'gene', keys)
+        put_by_keys(tx, 'gene', keys)
         self.match_statement = f'${self.var} isa gene, has identifier {self.identifier};'
 
 
@@ -116,7 +104,7 @@ def recurse(tx, root, base_index):
             pmid = node.attrib['pmid']
             pmids.append(pmid)
             keys = {'pmid': int(pmid)}
-            exists_or_insert(tx, 'pubmed-citation', keys)
+            put_by_keys(tx, 'pubmed-citation', keys)
 
         elif node.tag == 'axn':
             type_code = node.attrib['code']

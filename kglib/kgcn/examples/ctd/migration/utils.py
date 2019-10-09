@@ -32,3 +32,22 @@ def parse_xml_to_tree_line_by_line(data_path):
     with open(data_path) as data:
         for line in data:
             yield ET.fromstring(line)
+
+
+def put_by_keys(tx, type, keys_dict, extra_attributes_to_insert=None):
+    pm_query = f'$x isa {type}'
+
+    for type_key, key_value in keys_dict.items():
+        pm_query += f', has {type_key} {key_value}'
+
+    results = list(tx.query(f'match {pm_query}; get;'))
+    if len(results) == 0:
+        extra = ''
+        if extra_attributes_to_insert is not None:
+            for attr_name, value in extra_attributes_to_insert.items():
+                attr_statement = f', has {attr_name} {value}'
+                results = list(tx.query(f'match {pm_query}{attr_statement}; get;'))
+                if len(results) == 0:
+                    extra += attr_statement
+
+        tx.query(f'insert {pm_query}{extra};')

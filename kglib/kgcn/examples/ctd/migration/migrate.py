@@ -16,35 +16,39 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+
 import time
 
 from grakn.client import GraknClient
 
 from kglib.kgcn.examples.ctd.migration.CTD_chem_gene_ixn_types import migrate_chemical_gene_interaction_types
 from kglib.kgcn.examples.ctd.migration.CTD_chem_gene_ixns_structured import migrate_chemical_gene_interactions
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, parse_xml_to_tree_line_by_line
+from kglib.kgcn.examples.ctd.migration.CTD_diseases import migrate_diseases
 
 inputs = [
+    # {
+    #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixn_types.csv",
+    #     "template": migrate_chemical_gene_interaction_types,
+    # },
+    # {
+    #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixns_structured_snippet.xml",
+    #     "template": migrate_chemical_gene_interactions,
+    # },
     {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixn_types.csv",
-        "template": migrate_chemical_gene_interaction_types,
-        "reader_func": parse_csv_to_dictionaries
-    },
-    {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixns_structured_snippet.xml",
-        "template": migrate_chemical_gene_interactions,
-        "reader_func": parse_xml_to_tree_line_by_line
+        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_diseases_snippet.csv",
+        "template": migrate_diseases,
     },
 ]
+
+KEYSPACE = "ctd"
+URI = "localhost:48555"
 
 
 def migrate():
     start_time = time.time()
-    keyspace = "ctd"
-    uri = "localhost:48555"
 
-    client = GraknClient(uri=uri)
-    with client.session(keyspace=keyspace) as session:
+    client = GraknClient(uri=URI)
+    with client.session(keyspace=KEYSPACE) as session:
 
         for ip in inputs:
 

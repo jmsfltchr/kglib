@@ -1,8 +1,6 @@
 define
 
 chemical-gene-interaction sub relation,
-#    relates interacting-gene,
-#    relates interacting-chemical,
     relates from-actor,
     relates to-actor,
     relates data-source,
@@ -27,48 +25,32 @@ text sub attribute,
 name sub attribute,
     datatype string;
 
+definition sub attribute,
+    datatype string;
+
 chemical sub entity,
     key identifier,
-#    plays interacting-chemical;
     plays from-actor,
     plays to-actor,
     has name;
 
 gene sub entity,
     key identifier,
-#    plays interacting-gene;
     plays from-actor,
     plays to-actor,
     has name;
 
+disease sub entity,
+    key identifier,
+    has name,
+    has definition,
+    plays superior-disease,
+    plays subordinate-disease;
+
+disease-hierarchy sub relation,
+    relates superior-disease,
+    relates subordinate-disease;
+
 pubmed-citation sub entity,
     key pmid,
     plays data-source;
-
-#identifier sub attribute,
-#  datatype string;
-#
-#disease sub entity,
-#    has identifier;
-#
-#
-## chemical-disease interaction types:
-#
-#chemical-disease-interaction sub relation,
-#    relates interacting-chemical,
-#    relates interacting-disease;
-#
-#abundance sub chemical-disease-interaction;
-## The abundance of a chemical (if chemical synthesis is not known).
-#
-#activity sub chemical-disease-interaction;
-## An elemental function of a molecule.
-#
-#binding sub cdi;
-## A molecular interaction.
-#
-#cotreatment sub cdi;
-## Involving the use of two or more chemicals simultaneously.
-#
-#expression sub cdi;
-## The expression of a gene product.
