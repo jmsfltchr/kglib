@@ -35,6 +35,8 @@ chemical sub entity,
     key identifier,
     plays from-actor,
     plays to-actor,
+    plays superior-chemical,
+    plays subordinate-chemical,
     has name;
 
 gene sub entity,
@@ -51,9 +53,17 @@ disease sub entity,
     plays superior-disease,
     plays subordinate-disease;
 
-disease-hierarchy sub relation,
-    relates superior-disease,
-    relates subordinate-disease;
+hierarchy sub relation,
+    relates superior,
+    relates subordinate;
+
+disease-hierarchy sub hierarchy,
+    relates superior-disease as superior,
+    relates subordinate-disease as subordinate;
+
+chemical-hierarchy sub hierarchy,
+    relates superior-chemical as superior,
+    relates subordinate-chemical as subordinate;
 
 pubmed-citation sub entity,
     key pmid,
