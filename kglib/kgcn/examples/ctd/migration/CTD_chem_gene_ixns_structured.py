@@ -19,7 +19,7 @@
 
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_xml_to_tree_line_by_line, put_by_keys
+from kglib.kgcn.examples.ctd.migration.utils import parse_xml_to_tree_line_by_line, put_by_keys, commit_and_refresh
 from kglib.kgcn.examples.ctd.migration.type_codes import type_codes
 
 
@@ -66,23 +66,31 @@ class Interaction:
         return self
 
     def match_insert(self, actor1, actor2):
-        sources_match = ''
-        sources_insert = ''
-        for pmid in self.pmids:
-            sources_match += f'$source{pmid} isa pubmed-citation, has pmid {pmid}; '
-            sources_insert += f'data-source: $source{pmid},'
-
-        query = cleandoc(f'''match {actor1.match_statement}
-                          {actor2.match_statement}
-                          {sources_match}
-                    insert
-                        ${self.var}({sources_insert}
-                        from-actor: ${actor1.var}, 
-                        to-actor: ${actor2.var}
-                        ) isa {self.relation_type}, has degree {self.degree}, has identifier "{self.identifier}", has text "{self.text}";
-                ''')
+        query = cleandoc(f'''
+        match {actor1.match_statement}
+              {actor2.match_statement}
+        insert
+            (from-actor: ${actor1.var}, 
+            to-actor: ${actor2.var}
+            ) isa {self.relation_type}, has degree {self.degree}, has identifier "{self.identifier}", has text "{self.text}";
+        ''')
         print(query)
         self.tx.query(query)
+
+        for pmid in self.pmids:
+            if pmid != '':  # We get pmids = [''] if there are none
+                pm_keys = {'pmid': pmid}
+                put_by_keys(self.tx, 'pubmed-citation', pm_keys)
+
+                pm_query = cleandoc(f'''
+                match
+                    $inter isa {self.relation_type}, has identifier "{self.identifier}";
+                    $pm isa pubmed-citation, has pmid {pmid};
+                insert
+                    (sourced-data: $inter, data-source: $pm) isa data-sourcing;
+                    ''')
+                print(pm_query)
+                self.tx.query(pm_query)
 
 
 def recurse(tx, root, base_index):
@@ -149,12 +157,11 @@ def migrate_chemical_gene_interactions(session, data_path):
     line_trees = parse_xml_to_tree_line_by_line(data_path)
 
     tx = session.transaction().write()
-    for root in line_trees:
+    for i, root in enumerate(line_trees):
 
         if root[0].tag == 'taxon' and root[0].attrib['id'] == '9606':
 
             recurse(tx, root, 0)
 
-        tx.commit()
-        tx = session.transaction().write()
+        tx = commit_and_refresh(session, tx, i, every=50)
     tx.commit()

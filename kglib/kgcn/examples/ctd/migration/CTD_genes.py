@@ -17,23 +17,23 @@
 #  under the License.
 #
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, put_by_keys
+from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, put_by_keys, commit_and_refresh
 
 
 def migrate_genes(session, data_path):
-    with session.transaction().write() as tx:
+    tx = session.transaction().write()
 
-        line_dicts = parse_csv_to_dictionaries(data_path)
+    line_dicts = parse_csv_to_dictionaries(data_path)
 
-        for i, line_dict in enumerate(line_dicts):
+    for i, line_dict in enumerate(line_dicts):
 
-            name = line_dict['GeneName']
-            identifier = line_dict['GeneID']
-            symbol = line_dict['GeneSymbol']
+        name = line_dict['GeneName']
+        identifier = line_dict['GeneID']
+        symbol = line_dict['GeneSymbol']
 
-            keys = {'identifier': f'"{identifier}"'}
-            extra_attributes_to_insert = {'name': f'"{name}"', 'symbol': f'"{symbol}"'}
+        keys = {'identifier': f'"{identifier}"'}
+        extra_attributes_to_insert = {'name': f'"{name}"', 'symbol': f'"{symbol}"'}
 
-            put_by_keys(tx, 'gene', keys, extra_attributes_to_insert=extra_attributes_to_insert)
-
-        tx.commit()
+        put_by_keys(tx, 'gene', keys, extra_attributes_to_insert=extra_attributes_to_insert)
+        tx = commit_and_refresh(session, tx, i, every=50)
+    tx.commit()

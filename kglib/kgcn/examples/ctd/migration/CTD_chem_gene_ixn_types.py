@@ -22,41 +22,41 @@ Migrate chemical-gene interaction types
 """
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries
+from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, commit_and_refresh
 
 
 def construct_query(type_name, parent_type):
     return cleandoc(f'''define {type_name} sub {parent_type},
                relates from-actor,
-               relates to-actor,
-               relates data-source;''')
+               relates to-actor;''')
 
 
 def migrate_chemical_gene_interaction_types(session, data_path):
 
-    with session.transaction().write() as tx:
+    tx = session.transaction().write()
 
-        tx.query(construct_query('chemical-gene-interaction', 'relation'))
+    tx.query(construct_query('chemical-gene-interaction', 'relation'))
 
-        line_dicts = parse_csv_to_dictionaries(data_path)
+    line_dicts = parse_csv_to_dictionaries(data_path)
 
-        codes = {}
+    codes = {}
 
-        for i, line_dict in enumerate(line_dicts):
+    for i, line_dict in enumerate(line_dicts):
 
-            parent_code = line_dict["ParentCode"]
+        parent_code = line_dict["ParentCode"]
 
-            if parent_code == "":
-                parent_type = 'chemical-gene-interaction'
-            else:
-                parent_type = codes[parent_code]
+        if parent_code == "":
+            parent_type = 'chemical-gene-interaction'
+        else:
+            parent_type = codes[parent_code]
 
-            type_name = line_dict["TypeName"].replace(" ", "-")
+        type_name = line_dict["TypeName"].replace(" ", "-")
 
-            codes[line_dict["Code"]] = type_name
+        codes[line_dict["Code"]] = type_name
 
-            q = construct_query(type_name, parent_type)
-            print(q)
-            tx.query(q)
+        q = construct_query(type_name, parent_type)
+        print(q)
+        tx.query(q)
 
-        tx.commit()
+        tx = commit_and_refresh(session, tx, i, every=50)
+    tx.commit()

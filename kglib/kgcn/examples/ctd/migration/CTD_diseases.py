@@ -19,42 +19,42 @@
 
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, put_by_keys
+from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, put_by_keys, commit_and_refresh
 
 
 def migrate_diseases(session, data_path):
 
-    with session.transaction().write() as tx:
+    tx = session.transaction().write()
 
-        line_dicts = parse_csv_to_dictionaries(data_path)
+    line_dicts = parse_csv_to_dictionaries(data_path)
 
-        for i, line_dict in enumerate(line_dicts):
+    for i, line_dict in enumerate(line_dicts):
 
-            name = line_dict['DiseaseName']
-            identifier = line_dict['DiseaseID']
-            definition = line_dict['Definition']
+        name = line_dict['DiseaseName']
+        identifier = line_dict['DiseaseID']
+        definition = line_dict['Definition']
 
-            keys = {'identifier': f'"{identifier}"'}
-            extra_attributes_to_insert = {'name': f'"{name}"'}
+        keys = {'identifier': f'"{identifier}"'}
+        extra_attributes_to_insert = {'name': f'"{name}"'}
 
-            if definition != '':
-                extra_attributes_to_insert.update({'definition': f'"{definition}"'})
+        if definition != '':
+            extra_attributes_to_insert.update({'definition': f'"{definition}"'})
 
-            put_by_keys(tx, 'disease', keys, extra_attributes_to_insert=extra_attributes_to_insert)
+        put_by_keys(tx, 'disease', keys, extra_attributes_to_insert=extra_attributes_to_insert)
 
-            parent_ids = line_dict['ParentIDs'].split(sep='|')
+        parent_ids = line_dict['ParentIDs'].split(sep='|')
 
-            for parent_id in parent_ids:
-                parent_keys = {'identifier': f'"{parent_id}"'}
-                put_by_keys(tx, 'disease', parent_keys)
+        for parent_id in parent_ids:
+            parent_keys = {'identifier': f'"{parent_id}"'}
+            put_by_keys(tx, 'disease', parent_keys)
 
-                query = cleandoc(f'''
-                match
-                    $d isa disease, has identifier "{identifier}";
-                    $par isa disease, has identifier "{parent_id}";
-                insert
-                    (superior-disease: $par, subordinate-disease: $d) isa disease-hierarchy;
-                    ''')
-                tx.query(query)
-
-        tx.commit()
+            query = cleandoc(f'''
+            match
+                $d isa disease, has identifier "{identifier}";
+                $par isa disease, has identifier "{parent_id}";
+            insert
+                (superior-disease: $par, subordinate-disease: $d) isa disease-hierarchy;
+                ''')
+            tx.query(query)
+        tx = commit_and_refresh(session, tx, i, every=50)
+    tx.commit()

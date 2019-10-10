@@ -30,22 +30,22 @@ from kglib.kgcn.examples.ctd.migration.CTD_genes import migrate_genes
 from kglib.kgcn.examples.ctd.migration.CTD_genes_diseases import migrate_genes_diseases
 
 inputs = [
-    # {
-    #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixn_types.csv",
-    #     "template": migrate_chemical_gene_interaction_types,
-    # },
-    # {
-    #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixns_structured_snippet.xml",
-    #     "template": migrate_chemical_gene_interactions,
-    # },
-    # {
-    #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_diseases_snippet.csv",
-    #     "template": migrate_diseases,
-    # },
-    # {
-    #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_genes_snippet.csv",
-    #     "template": migrate_genes,
-    # },
+    {
+        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixn_types.csv",
+        "template": migrate_chemical_gene_interaction_types,
+    },
+    {
+        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixns_structured_snippet.xml",
+        "template": migrate_chemical_gene_interactions,
+    },
+    {
+        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_diseases_snippet.csv",
+        "template": migrate_diseases,
+    },
+    {
+        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_genes_snippet.csv",
+        "template": migrate_genes,
+    },
     {
         "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chemicals_snippet.csv",
         "template": migrate_chemicals,
@@ -54,10 +54,10 @@ inputs = [
         "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chemicals_diseases_snippet.csv",
         "template": migrate_chemicals_diseases,
     },
-    # {
-    #     "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_genes_diseases_snippet.csv",
-    #     "template": migrate_genes_diseases,
-    # },
+    {
+        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_genes_diseases_snippet.csv",
+        "template": migrate_genes_diseases,
+    },
 ]
 
 KEYSPACE = "ctd"
@@ -71,7 +71,9 @@ def migrate():
     with client.session(keyspace=KEYSPACE) as session:
 
         for ip in inputs:
-
+            print('==================================================')
+            print(f'Loading from {ip["data_path"]}')
+            print('==================================================')
             ip["template"](session, ip["data_path"])
 
     elapsed = time.time() - start_time

@@ -42,7 +42,6 @@ from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, p
 
 
 def migrate_chemicals_diseases(session, data_path):
-    # ChemicalName,ChemicalID,CasRN,DiseaseName,DiseaseID,DirectEvidence,InferenceGeneSymbol,InferenceScore,OmimIDs,PubMedIDs
     tx = session.transaction().write()
 
     line_dicts = parse_csv_to_dictionaries(data_path)
@@ -133,7 +132,5 @@ def migrate_chemicals_diseases(session, data_path):
             print(infer_query)
             tx.query(infer_query)
 
-        commit_and_refresh(session, tx, i, every=50)
-        # tx.commit()
-        # tx = session.transaction().write()
+        tx = commit_and_refresh(session, tx, i, every=50)
     tx.commit()
