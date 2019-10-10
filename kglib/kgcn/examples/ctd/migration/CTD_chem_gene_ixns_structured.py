@@ -157,3 +157,4 @@ def migrate_chemical_gene_interactions(session, data_path):
 
         tx.commit()
         tx = session.transaction().write()
+    tx.commit()

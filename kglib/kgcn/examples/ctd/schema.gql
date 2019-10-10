@@ -3,7 +3,7 @@ define
 chemical-gene-interaction sub relation,
     relates from-actor,
     relates to-actor,
-    relates data-source,
+    plays sourced-data,
     plays from-actor,
     plays to-actor,
     has degree,
@@ -37,12 +37,16 @@ chemical sub entity,
     plays to-actor,
     plays superior-chemical,
     plays subordinate-chemical,
+    plays associated-chemical,
+    plays therapeutic,
+    plays functional-chemical,
     has name;
 
 gene sub entity,
     key identifier,
     plays from-actor,
     plays to-actor,
+    plays inferred-from,
     has name,
     has symbol;
 
@@ -51,7 +55,11 @@ disease sub entity,
     has name,
     has definition,
     plays superior-disease,
-    plays subordinate-disease;
+    plays subordinate-disease,
+    plays treated-disease,
+    plays associated-disease,
+    plays treated-disease,
+    plays disease-function-of;
 
 hierarchy sub relation,
     relates superior,
@@ -64,6 +72,33 @@ disease-hierarchy sub hierarchy,
 chemical-hierarchy sub hierarchy,
     relates superior-chemical as superior,
     relates subordinate-chemical as subordinate;
+
+chemical-disease-association sub relation,
+    key identifier,
+    relates associated-chemical,
+    relates associated-disease,
+    plays sourced-data,
+    plays inferred-conclusion;
+
+therapy sub chemical-disease-association,
+    relates therapeutic as associated-chemical,
+    relates treated-disease as associated-disease;
+
+functional-association sub chemical-disease-association,
+    relates functional-chemical as associated-chemical,
+    relates disease-function-of as associated-disease;
+
+inference sub relation,
+    relates inferred-conclusion,
+    relates inferred-from,
+    has score;
+
+data-sourcing sub relation,
+    relates sourced-data,
+    relates data-source;
+
+score sub attribute,
+    datatype double;
 
 pubmed-citation sub entity,
     key pmid,
