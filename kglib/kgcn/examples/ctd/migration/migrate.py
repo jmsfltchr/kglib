@@ -29,33 +29,36 @@ from kglib.kgcn.examples.ctd.migration.CTD_diseases import migrate_diseases
 from kglib.kgcn.examples.ctd.migration.CTD_genes import migrate_genes
 from kglib.kgcn.examples.ctd.migration.CTD_genes_diseases import migrate_genes_diseases
 
+base_data_path = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/"
+base_data_path_snippets = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/snippets/"
+
 inputs = [
+    # {
+    #     "data_path": f"{base_data_path}CTD_chem_gene_ixn_types.csv",
+    #     "template": migrate_chemical_gene_interaction_types,
+    # },
+    # {
+    #     "data_path": f"{base_data_path}CTD_chem_gene_ixns_structured.xml",
+    #     "template": migrate_chemical_gene_interactions,
+    # },
+    # {
+    #     "data_path": f"{base_data_path}CTD_diseases.csv",
+    #     "template": migrate_diseases,
+    # },
+    # {
+    #     "data_path": f"{base_data_path}CTD_genes.csv",
+    #     "template": migrate_genes,
+    # },
     {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixn_types.csv",
-        "template": migrate_chemical_gene_interaction_types,
-    },
-    {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chem_gene_ixns_structured_snippet.xml",
-        "template": migrate_chemical_gene_interactions,
-    },
-    {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_diseases_snippet.csv",
-        "template": migrate_diseases,
-    },
-    {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_genes_snippet.csv",
-        "template": migrate_genes,
-    },
-    {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chemicals_snippet.csv",
+        "data_path": f"{base_data_path}CTD_chemicals.csv",
         "template": migrate_chemicals,
     },
+    # {
+    #     "data_path": f"{base_data_path}CTD_chemicals_diseases.csv",
+    #     "template": migrate_chemicals_diseases,
+    # },
     {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_chemicals_diseases_snippet.csv",
-        "template": migrate_chemicals_diseases,
-    },
-    {
-        "data_path": "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/CTD_genes_diseases_snippet.csv",
+        "data_path": f"{base_data_path_snippets}CTD_genes_diseases.csv",
         "template": migrate_genes_diseases,
     },
 ]

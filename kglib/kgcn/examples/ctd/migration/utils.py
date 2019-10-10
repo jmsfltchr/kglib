@@ -24,7 +24,7 @@ import xml.etree.ElementTree as ET
 def parse_csv_to_dictionaries(data_path):
     with open(data_path) as data:
         for row in csv.DictReader(data, skipinitialspace=True):
-            item = {key: value for key, value in row.items()}
+            item = {key: value for key, value in row.items()}  # TODO Looks like this does nothing
             yield item
 
 

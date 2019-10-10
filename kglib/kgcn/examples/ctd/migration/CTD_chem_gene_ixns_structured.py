@@ -158,7 +158,6 @@ def migrate_chemical_gene_interactions(session, data_path):
 
     tx = session.transaction().write()
     for i, root in enumerate(line_trees):
-
         if root[0].tag == 'taxon' and root[0].attrib['id'] == '9606':
 
             recurse(tx, root, 0)

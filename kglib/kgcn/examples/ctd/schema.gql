@@ -40,13 +40,16 @@ chemical sub entity,
     plays associated-chemical,
     plays therapeutic,
     plays functional-chemical,
-    has name;
+    plays inferred-from,
+    has name,
+    has definition;
 
 gene sub entity,
     key identifier,
     plays from-actor,
     plays to-actor,
     plays inferred-from,
+    plays associated-gene,
     has name,
     has symbol;
 
@@ -73,12 +76,15 @@ chemical-hierarchy sub hierarchy,
     relates superior-chemical as superior,
     relates subordinate-chemical as subordinate;
 
-chemical-disease-association sub relation,
+association sub relation,
     key identifier,
-    relates associated-chemical,
-    relates associated-disease,
+    relates associated,
     plays sourced-data,
     plays inferred-conclusion;
+
+chemical-disease-association sub association,
+    relates associated-chemical as associated,
+    relates associated-disease as associated;
 
 therapy sub chemical-disease-association,
     relates therapeutic as associated-chemical,
@@ -87,6 +93,10 @@ therapy sub chemical-disease-association,
 functional-association sub chemical-disease-association,
     relates functional-chemical as associated-chemical,
     relates disease-function-of as associated-disease;
+
+gene-disease-association sub association,
+    relates associated-disease as associated,
+    relates associated-gene as associated;
 
 inference sub relation,
     relates inferred-conclusion,
