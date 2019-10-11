@@ -74,3 +74,10 @@ def split_file_into_batches(data_path, line_parser, batch_size):
     line_trees = line_parser(data_path)
     batch_generator = batcher(line_trees, batch_size)
     return batch_generator
+
+
+def limit_generator(generator, limit=None):
+    for i, item in enumerate(generator):
+        if i is not None and i >= limit:
+            break
+        yield item

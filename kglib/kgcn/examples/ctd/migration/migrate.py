@@ -30,7 +30,7 @@ from kglib.kgcn.examples.ctd.migration.CTD_genes import migrate_genes
 from kglib.kgcn.examples.ctd.migration.CTD_genes_diseases import migrate_genes_diseases
 from kglib.kgcn.examples.ctd.migration.multi import multi_thread_batches
 from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, parse_xml_to_tree_line_by_line, \
-    split_file_into_batches
+    split_file_into_batches, limit_generator
 
 base_data_path = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/"
 base_data_path_snippets = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/snippets/"
@@ -76,6 +76,7 @@ inputs = [
 KEYSPACE = "ctd_chemicals"
 URI = "localhost:48555"
 BATCH_SIZE = 50
+NUM_BATCHES = 100
 
 
 def migrate():
@@ -92,6 +93,8 @@ def migrate():
             parser = ip["parser"]
 
             batches = split_file_into_batches(ip["data_path"], parser, BATCH_SIZE)
+            batches = limit_generator(batches, NUM_BATCHES)
+
             migration_func = ip["migration"]
 
             multi_thread_batches(batches, KEYSPACE, URI, migration_func, num_processes=8)
