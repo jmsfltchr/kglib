@@ -18,6 +18,7 @@
 #
 
 import csv
+import multiprocessing
 import xml.etree.ElementTree as ET
 
 
@@ -53,9 +54,26 @@ def put_by_keys(tx, type, keys_dict, extra_attributes_to_insert=None):
         tx.query(f'insert {pm_query}{extra};')
 
 
+def assert_one_inserted(answers):
+    num_answers = len(list(answers))
+    if num_answers != 1:
+        raise ValueError(f"Found an incorrect number of answers. Expected 1, got {num_answers}")
+
+
 def commit_and_refresh(session, current_tx, index, every=50):
     if index % every == 0:
         current_tx.commit()
         tx = session.transaction().write()
         return tx
     return current_tx
+
+
+def batcher(items_iterator, batch_size):
+    batch = []
+
+    for index, item in enumerate(items_iterator):
+
+        batch.append((index, item))
+        if index % batch_size == 0:
+            yield batch
+            batch = []

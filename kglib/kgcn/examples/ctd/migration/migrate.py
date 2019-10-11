@@ -23,11 +23,12 @@ from grakn.client import GraknClient
 
 from kglib.kgcn.examples.ctd.migration.CTD_chem_gene_ixn_types import migrate_chemical_gene_interaction_types
 from kglib.kgcn.examples.ctd.migration.CTD_chem_gene_ixns_structured import migrate_chemical_gene_interactions
-from kglib.kgcn.examples.ctd.migration.CTD_chemicals import migrate_chemicals
+from kglib.kgcn.examples.ctd.migration.CTD_chemicals import split_chemicals_into_batches, migrate_chemicals_batch
 from kglib.kgcn.examples.ctd.migration.CTD_chemicals_diseases import migrate_chemicals_diseases
 from kglib.kgcn.examples.ctd.migration.CTD_diseases import migrate_diseases
 from kglib.kgcn.examples.ctd.migration.CTD_genes import migrate_genes
 from kglib.kgcn.examples.ctd.migration.CTD_genes_diseases import migrate_genes_diseases
+from kglib.kgcn.examples.ctd.migration.test_multi import multi_process_batches
 
 base_data_path = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/"
 base_data_path_snippets = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/snippets/"
@@ -50,21 +51,23 @@ inputs = [
     #     "template": migrate_genes,
     # },
     {
-        "data_path": f"{base_data_path}CTD_chemicals.csv",
-        "template": migrate_chemicals,
+        "data_path": f"{base_data_path_snippets}CTD_chemicals.csv",
+        "batching": split_chemicals_into_batches,
+        "migration": migrate_chemicals_batch,
     },
     # {
     #     "data_path": f"{base_data_path}CTD_chemicals_diseases.csv",
     #     "template": migrate_chemicals_diseases,
     # },
-    {
-        "data_path": f"{base_data_path_snippets}CTD_genes_diseases.csv",
-        "template": migrate_genes_diseases,
-    },
+    # {
+    #     "data_path": f"{base_data_path_snippets}CTD_genes_diseases.csv",
+    #     "template": migrate_genes_diseases,
+    # },
 ]
 
-KEYSPACE = "ctd"
+KEYSPACE = "ctd_chemicals"
 URI = "localhost:48555"
+BATCH_SIZE = 5
 
 
 def migrate():
@@ -77,7 +80,16 @@ def migrate():
             print('==================================================')
             print(f'Loading from {ip["data_path"]}')
             print('==================================================')
-            ip["template"](session, ip["data_path"])
+
+            batch_func = ip["batching"]
+
+            batches = batch_func(ip["data_path"], BATCH_SIZE)
+            migration_func = ip["migration"]
+
+            multi_process_batches(batches, KEYSPACE, URI, migration_func, num_processes=None)
+
+            elapsed = time.time() - start_time
+            print(f'Time elapsed {elapsed:.1f} seconds')
 
     elapsed = time.time() - start_time
     print(f'Time elapsed {elapsed:.1f} seconds')
