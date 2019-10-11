@@ -22,6 +22,8 @@ Migrate chemical-gene interaction types
 """
 from inspect import cleandoc
 
+from kglib.kgcn.examples.ctd.migration.type_codes import type_codes
+
 
 def construct_query(type_name, parent_type):
     return cleandoc(f'''define {type_name} sub {parent_type},
@@ -33,8 +35,6 @@ def migrate_chemical_gene_interaction_types(batch, tx):
 
     tx.query(construct_query('chemical-gene-interaction', 'relation'))
 
-    codes = {}
-
     for i, line_dict in batch:
 
         parent_code = line_dict["ParentCode"]
@@ -42,11 +42,11 @@ def migrate_chemical_gene_interaction_types(batch, tx):
         if parent_code == "":
             parent_type = 'chemical-gene-interaction'
         else:
-            parent_type = codes[parent_code]
+            parent_type = type_codes[parent_code]
 
         type_name = line_dict["TypeName"].replace(" ", "-")
 
-        codes[line_dict["Code"]] = type_name
+        type_codes[line_dict["Code"]] = type_name
 
         q = construct_query(type_name, parent_type)
         print(q)

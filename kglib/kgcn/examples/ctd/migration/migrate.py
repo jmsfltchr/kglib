@@ -42,11 +42,6 @@ inputs = [
         "migration": migrate_chemical_gene_interaction_types,
     },
     {
-        "data_path": f"{base_data_path}CTD_chem_gene_ixns_structured.xml",
-        "parser": parse_xml_to_tree_line_by_line,
-        "migration": migrate_chemical_gene_interactions,
-    },
-    {
         "data_path": f"{base_data_path}CTD_diseases.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_diseases,
@@ -62,6 +57,11 @@ inputs = [
         "migration": migrate_chemicals,
     },
     {
+        "data_path": f"{base_data_path}CTD_chem_gene_ixns_structured.xml",
+        "parser": parse_xml_to_tree_line_by_line,
+        "migration": migrate_chemical_gene_interactions,
+    },
+    {
         "data_path": f"{base_data_path}CTD_chemicals_diseases.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_chemicals_diseases,
@@ -73,9 +73,9 @@ inputs = [
     },
 ]
 
-KEYSPACE = "ctd_chemicals"
+KEYSPACE = "ctd_trial_1"
 URI = "localhost:48555"
-BATCH_SIZE = 50
+BATCH_SIZE = 5
 NUM_BATCHES = 100
 
 

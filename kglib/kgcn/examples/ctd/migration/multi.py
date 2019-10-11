@@ -22,22 +22,33 @@ from multiprocessing.dummy import Pool as ThreadPool
 from grakn.client import GraknClient
 from functools import partial
 
+from grakn.exception.GraknError import GraknError
+
 
 def migrate_batch(session, migration_func, batch):
-    print(f"Processing batch {batch}")
+    print(f"++ Processing batch {batch}")
 
     success = False
+    num_attempts = 0
     while not success:
         tx = session.transaction().write()
-        migration_func(batch, tx)
+
         try:
+            migration_func(batch, tx)
             tx.commit()
-        except():
+        except GraknError as e:
             success = False
-            print('Unsuccessful batch')
+            print('** Unsuccessful batch')
+            print(str(e))
+            num_attempts += 1
         else:
             success = True
-    print('Successful batch')
+
+        if num_attempts >= 5:
+            print(f'**** Unsuccessful batch from {num_attempts} attempts')
+            break
+
+    print('++ Successful batch')
 
 
 def multi_thread_batches(batches, keyspace, uri, migration_func, num_processes=None):
