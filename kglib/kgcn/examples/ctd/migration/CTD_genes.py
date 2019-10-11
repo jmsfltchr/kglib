@@ -17,15 +17,12 @@
 #  under the License.
 #
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, put_by_keys, commit_and_refresh
+from kglib.kgcn.examples.ctd.migration.utils import put_by_keys
 
 
-def migrate_genes(session, data_path):
-    tx = session.transaction().write()
+def migrate_genes(batch, tx):
 
-    line_dicts = parse_csv_to_dictionaries(data_path)
-
-    for i, line_dict in enumerate(line_dicts):
+    for i, line_dict in batch:
 
         name = line_dict['GeneName']
         identifier = line_dict['GeneID']
@@ -35,5 +32,3 @@ def migrate_genes(session, data_path):
         extra_attributes_to_insert = {'name': f'"{name}"', 'symbol': f'"{symbol}"'}
 
         put_by_keys(tx, 'gene', keys, extra_attributes_to_insert=extra_attributes_to_insert)
-        tx = commit_and_refresh(session, tx, i, every=50)
-    tx.commit()

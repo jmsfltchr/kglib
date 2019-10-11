@@ -23,51 +23,59 @@ from grakn.client import GraknClient
 
 from kglib.kgcn.examples.ctd.migration.CTD_chem_gene_ixn_types import migrate_chemical_gene_interaction_types
 from kglib.kgcn.examples.ctd.migration.CTD_chem_gene_ixns_structured import migrate_chemical_gene_interactions
-from kglib.kgcn.examples.ctd.migration.CTD_chemicals import split_chemicals_into_batches, migrate_chemicals_batch
+from kglib.kgcn.examples.ctd.migration.CTD_chemicals import migrate_chemicals
 from kglib.kgcn.examples.ctd.migration.CTD_chemicals_diseases import migrate_chemicals_diseases
 from kglib.kgcn.examples.ctd.migration.CTD_diseases import migrate_diseases
 from kglib.kgcn.examples.ctd.migration.CTD_genes import migrate_genes
 from kglib.kgcn.examples.ctd.migration.CTD_genes_diseases import migrate_genes_diseases
 from kglib.kgcn.examples.ctd.migration.multi import multi_thread_batches
+from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, parse_xml_to_tree_line_by_line, \
+    split_file_into_batches
 
 base_data_path = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/"
 base_data_path_snippets = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/snippets/"
 
 inputs = [
-    # {
-    #     "data_path": f"{base_data_path}CTD_chem_gene_ixn_types.csv",
-    #     "template": migrate_chemical_gene_interaction_types,
-    # },
-    # {
-    #     "data_path": f"{base_data_path}CTD_chem_gene_ixns_structured.xml",
-    #     "template": migrate_chemical_gene_interactions,
-    # },
-    # {
-    #     "data_path": f"{base_data_path}CTD_diseases.csv",
-    #     "template": migrate_diseases,
-    # },
-    # {
-    #     "data_path": f"{base_data_path}CTD_genes.csv",
-    #     "template": migrate_genes,
-    # },
+    {
+        "data_path": f"{base_data_path}CTD_chem_gene_ixn_types.csv",
+        "parser": parse_csv_to_dictionaries,
+        "migration": migrate_chemical_gene_interaction_types,
+    },
+    {
+        "data_path": f"{base_data_path}CTD_chem_gene_ixns_structured.xml",
+        "parser": parse_xml_to_tree_line_by_line,
+        "migration": migrate_chemical_gene_interactions,
+    },
+    {
+        "data_path": f"{base_data_path}CTD_diseases.csv",
+        "parser": parse_csv_to_dictionaries,
+        "migration": migrate_diseases,
+    },
+    {
+        "data_path": f"{base_data_path}CTD_genes.csv",
+        "parser": parse_csv_to_dictionaries,
+        "migration": migrate_genes,
+    },
     {
         "data_path": f"{base_data_path}CTD_chemicals.csv",
-        "batching": split_chemicals_into_batches,
-        "migration": migrate_chemicals_batch,
+        "parser": parse_csv_to_dictionaries,
+        "migration": migrate_chemicals,
     },
-    # {
-    #     "data_path": f"{base_data_path}CTD_chemicals_diseases.csv",
-    #     "template": migrate_chemicals_diseases,
-    # },
-    # {
-    #     "data_path": f"{base_data_path_snippets}CTD_genes_diseases.csv",
-    #     "template": migrate_genes_diseases,
-    # },
+    {
+        "data_path": f"{base_data_path}CTD_chemicals_diseases.csv",
+        "parser": parse_csv_to_dictionaries,
+        "migration": migrate_chemicals_diseases,
+    },
+    {
+        "data_path": f"{base_data_path_snippets}CTD_genes_diseases.csv",
+        "parser": parse_csv_to_dictionaries,
+        "migration": migrate_genes_diseases,
+    },
 ]
 
 KEYSPACE = "ctd_chemicals"
 URI = "localhost:48555"
-BATCH_SIZE = 5
+BATCH_SIZE = 50
 
 
 def migrate():
@@ -81,12 +89,12 @@ def migrate():
             print(f'Loading from {ip["data_path"]}')
             print('==================================================')
 
-            batch_func = ip["batching"]
+            parser = ip["parser"]
 
-            batches = batch_func(ip["data_path"], BATCH_SIZE)
+            batches = split_file_into_batches(ip["data_path"], parser, BATCH_SIZE)
             migration_func = ip["migration"]
 
-            multi_thread_batches(batches, KEYSPACE, URI, migration_func, num_threads=None)
+            multi_thread_batches(batches, KEYSPACE, URI, migration_func, num_processes=8)
 
             elapsed = time.time() - start_time
             print(f'Time elapsed {elapsed:.1f} seconds')

@@ -18,7 +18,6 @@
 #
 
 import csv
-import multiprocessing
 import xml.etree.ElementTree as ET
 
 
@@ -60,14 +59,6 @@ def assert_one_inserted(answers):
         raise ValueError(f"Found an incorrect number of answers. Expected 1, got {num_answers}")
 
 
-def commit_and_refresh(session, current_tx, index, every=50):
-    if index % every == 0:
-        current_tx.commit()
-        tx = session.transaction().write()
-        return tx
-    return current_tx
-
-
 def batcher(items_iterator, batch_size):
     batch = []
 
@@ -77,3 +68,9 @@ def batcher(items_iterator, batch_size):
         if index % batch_size == 0:
             yield batch
             batch = []
+
+
+def split_file_into_batches(data_path, line_parser, batch_size):
+    line_trees = line_parser(data_path)
+    batch_generator = batcher(line_trees, batch_size)
+    return batch_generator

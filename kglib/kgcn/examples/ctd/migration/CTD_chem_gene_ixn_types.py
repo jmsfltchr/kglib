@@ -22,8 +22,6 @@ Migrate chemical-gene interaction types
 """
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, commit_and_refresh
-
 
 def construct_query(type_name, parent_type):
     return cleandoc(f'''define {type_name} sub {parent_type},
@@ -31,17 +29,13 @@ def construct_query(type_name, parent_type):
                relates to-actor;''')
 
 
-def migrate_chemical_gene_interaction_types(session, data_path):
-
-    tx = session.transaction().write()
+def migrate_chemical_gene_interaction_types(batch, tx):
 
     tx.query(construct_query('chemical-gene-interaction', 'relation'))
 
-    line_dicts = parse_csv_to_dictionaries(data_path)
-
     codes = {}
 
-    for i, line_dict in enumerate(line_dicts):
+    for i, line_dict in batch:
 
         parent_code = line_dict["ParentCode"]
 
@@ -57,6 +51,3 @@ def migrate_chemical_gene_interaction_types(session, data_path):
         q = construct_query(type_name, parent_type)
         print(q)
         tx.query(q)
-
-        tx = commit_and_refresh(session, tx, i, every=50)
-    tx.commit()

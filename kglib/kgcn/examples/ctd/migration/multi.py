@@ -29,17 +29,22 @@ def migrate_batch(session, migration_func, batch):
     success = False
     while not success:
         tx = session.transaction().write()
-        success = migration_func(batch, tx)
-        if not success:
+        migration_func(batch, tx)
+        try:
+            tx.commit()
+        except():
+            success = False
             print('Unsuccessful batch')
+        else:
+            success = True
     print('Successful batch')
 
 
-def multi_thread_batches(batches, keyspace, uri, migration_func, num_threads=None):
+def multi_thread_batches(batches, keyspace, uri, migration_func, num_processes=None):
     client = GraknClient(uri=uri)
     session = client.session(keyspace)
 
-    pool = ThreadPool(num_threads)
+    pool = ThreadPool(num_processes)
     pool.map(partial(migrate_batch, session, migration_func), batches)
 
     pool.close()

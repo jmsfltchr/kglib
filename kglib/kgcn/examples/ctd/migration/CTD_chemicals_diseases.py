@@ -38,15 +38,11 @@
 
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, put_by_keys, commit_and_refresh
+from kglib.kgcn.examples.ctd.migration.utils import put_by_keys
 
 
-def migrate_chemicals_diseases(session, data_path):
-    tx = session.transaction().write()
-
-    line_dicts = parse_csv_to_dictionaries(data_path)
-
-    for i, line_dict in enumerate(line_dicts):
+def migrate_chemicals_diseases(batch, tx):
+    for i, line_dict in batch:
 
         chem_name = line_dict['ChemicalName']
         chem_identifier = line_dict['ChemicalID']
@@ -131,6 +127,3 @@ def migrate_chemicals_diseases(session, data_path):
             ''')
             print(infer_query)
             tx.query(infer_query)
-
-        tx = commit_and_refresh(session, tx, i, every=50)
-    tx.commit()

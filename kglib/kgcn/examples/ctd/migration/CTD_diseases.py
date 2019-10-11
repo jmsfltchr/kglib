@@ -19,16 +19,12 @@
 
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, put_by_keys, commit_and_refresh
+from kglib.kgcn.examples.ctd.migration.utils import put_by_keys
 
 
-def migrate_diseases(session, data_path):
+def migrate_diseases(batch, tx):
 
-    tx = session.transaction().write()
-
-    line_dicts = parse_csv_to_dictionaries(data_path)
-
-    for i, line_dict in enumerate(line_dicts):
+    for i, line_dict in batch:
 
         name = line_dict['DiseaseName']
         identifier = line_dict['DiseaseID']
@@ -56,5 +52,3 @@ def migrate_diseases(session, data_path):
                 (superior-disease: $par, subordinate-disease: $d) isa disease-hierarchy;
                 ''')
             tx.query(query)
-        tx = commit_and_refresh(session, tx, i, every=50)
-    tx.commit()

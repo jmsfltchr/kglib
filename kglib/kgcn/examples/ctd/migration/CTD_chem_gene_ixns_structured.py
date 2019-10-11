@@ -19,8 +19,8 @@
 
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_xml_to_tree_line_by_line, put_by_keys, commit_and_refresh
 from kglib.kgcn.examples.ctd.migration.type_codes import type_codes
+from kglib.kgcn.examples.ctd.migration.utils import put_by_keys
 
 
 class Chemical:
@@ -152,15 +152,8 @@ def recurse(tx, root, base_index):
     return interaction
 
 
-def migrate_chemical_gene_interactions(session, data_path):
+def migrate_chemical_gene_interactions(batch, tx):
 
-    line_trees = parse_xml_to_tree_line_by_line(data_path)
-
-    tx = session.transaction().write()
-    for i, root in enumerate(line_trees):
+    for i, root in batch:
         if root[0].tag == 'taxon' and root[0].attrib['id'] == '9606':
-
             recurse(tx, root, 0)
-
-        tx = commit_and_refresh(session, tx, i, every=50)
-    tx.commit()

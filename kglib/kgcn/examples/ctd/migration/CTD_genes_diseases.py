@@ -19,16 +19,11 @@
 
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, put_by_keys, commit_and_refresh, \
-    assert_one_inserted
+from kglib.kgcn.examples.ctd.migration.utils import put_by_keys, assert_one_inserted
 
 
-def migrate_genes_diseases(session, data_path):
-    tx = session.transaction().write()
-
-    line_dicts = parse_csv_to_dictionaries(data_path)
-
-    for i, line_dict in enumerate(line_dicts):
+def migrate_genes_diseases(batch, tx):
+    for i, line_dict in batch:
 
         gene_symbol = line_dict['GeneSymbol']
         gene_id = line_dict['GeneID']
@@ -110,6 +105,3 @@ def migrate_genes_diseases(session, data_path):
             print(infer_query)
             res = tx.query(infer_query)
             assert_one_inserted(res)
-
-        tx = commit_and_refresh(session, tx, i, every=50)
-    tx.commit()

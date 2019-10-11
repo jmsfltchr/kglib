@@ -19,16 +19,10 @@
 
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, put_by_keys, batcher
+from kglib.kgcn.examples.ctd.migration.utils import put_by_keys
 
 
-def split_chemicals_into_batches(data_path, batch_size):
-    line_dicts = parse_csv_to_dictionaries(data_path)
-    batch_generator = batcher(line_dicts, batch_size)
-    return batch_generator
-
-
-def migrate_chemicals_batch(batch, tx):
+def migrate_chemicals(batch, tx):
 
     for i, line_dict in batch:
         name = line_dict['ChemicalName']
@@ -55,9 +49,3 @@ def migrate_chemicals_batch(batch, tx):
                     (superior-chemical: $par, subordinate-chemical: $d) isa chemical-hierarchy;
                     ''')
             tx.query(query)
-
-    try:
-        tx.commit()
-        return True
-    except():
-        return False
