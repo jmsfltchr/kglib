@@ -28,7 +28,7 @@ from kglib.kgcn.examples.ctd.migration.CTD_chemicals_diseases import migrate_che
 from kglib.kgcn.examples.ctd.migration.CTD_diseases import migrate_diseases
 from kglib.kgcn.examples.ctd.migration.CTD_genes import migrate_genes
 from kglib.kgcn.examples.ctd.migration.CTD_genes_diseases import migrate_genes_diseases
-from kglib.kgcn.examples.ctd.migration.multi import multi_thread_batches
+from kglib.kgcn.examples.ctd.migration.multi import multi_thread_batches, single_thread_batches
 from kglib.kgcn.examples.ctd.migration.utils import parse_csv_to_dictionaries, parse_xml_to_tree_line_by_line, \
     split_file_into_batches, limit_generator
 
@@ -40,40 +40,47 @@ inputs = [
         "data_path": f"{base_data_path}CTD_chem_gene_ixn_types.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_chemical_gene_interaction_types,
+        "start_index": 0,
     },
     {
         "data_path": f"{base_data_path}CTD_diseases.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_diseases,
+        "start_index": 10000,
     },
     {
         "data_path": f"{base_data_path}CTD_genes.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_genes,
+        "start_index": 20000,
     },
     {
         "data_path": f"{base_data_path}CTD_chemicals.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_chemicals,
+        "start_index": 30000,
     },
     {
         "data_path": f"{base_data_path}CTD_chem_gene_ixns_structured.xml",
         "parser": parse_xml_to_tree_line_by_line,
         "migration": migrate_chemical_gene_interactions,
+        "start_index": 40000,
     },
     {
         "data_path": f"{base_data_path}CTD_chemicals_diseases.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_chemicals_diseases,
+        "start_index": 50000,
     },
     {
         "data_path": f"{base_data_path_snippets}CTD_genes_diseases.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_genes_diseases,
+        "start_index": 60000,
     },
 ]
 
-KEYSPACE = "ctd_trial_1"
+KEYSPACE = "ctd_trial_single_thread"
 URI = "localhost:48555"
 BATCH_SIZE = 5
 NUM_BATCHES = 100
@@ -92,12 +99,13 @@ def migrate():
 
             parser = ip["parser"]
 
-            batches = split_file_into_batches(ip["data_path"], parser, BATCH_SIZE)
+            batches = split_file_into_batches(ip["data_path"], parser, BATCH_SIZE, starting_index=ip["start_index"])
             batches = limit_generator(batches, NUM_BATCHES)
 
             migration_func = ip["migration"]
 
-            multi_thread_batches(batches, KEYSPACE, URI, migration_func, num_processes=8)
+            single_thread_batches(batches, KEYSPACE, URI, migration_func, num_processes=8)
+            # multi_thread_batches(batches, KEYSPACE, URI, migration_func, num_processes=8)
 
             elapsed = time.time() - start_time
             print(f'Time elapsed {elapsed:.1f} seconds')

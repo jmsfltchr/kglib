@@ -1,14 +1,6 @@
 define
 
-chemical-gene-interaction sub relation,
-    relates from-actor,
-    relates to-actor,
-    plays sourced-data,
-    plays from-actor,
-    plays to-actor,
-    has degree,
-    key identifier,
-    has text;
+
 
 pmid sub attribute,
     datatype long;
@@ -18,6 +10,7 @@ degree sub attribute,
 
 identifier sub attribute,
     datatype string;
+
 
 text sub attribute,
     datatype string;
@@ -30,6 +23,9 @@ symbol sub attribute,
 
 definition sub attribute,
     datatype string;
+
+score sub attribute,
+    datatype double;
 
 chemical sub entity,
     key identifier,
@@ -62,7 +58,8 @@ disease sub entity,
     plays treated-disease,
     plays associated-disease,
     plays treated-disease,
-    plays disease-function-of;
+    plays disease-function-of,
+    plays associated-disease;
 
 hierarchy sub relation,
     relates superior,
@@ -75,6 +72,16 @@ disease-hierarchy sub hierarchy,
 chemical-hierarchy sub hierarchy,
     relates superior-chemical as superior,
     relates subordinate-chemical as subordinate;
+
+chemical-gene-interaction sub relation,
+    relates from-actor,
+    relates to-actor,
+    plays sourced-data,
+    plays from-actor,
+    plays to-actor,
+    has degree,
+    key identifier,
+    has text;
 
 association sub relation,
     key identifier,
@@ -107,9 +114,38 @@ data-sourcing sub relation,
     relates sourced-data,
     relates data-source;
 
-score sub attribute,
-    datatype double;
-
 pubmed-citation sub entity,
     key pmid,
     plays data-source;
+
+# Rules
+disease-disease-association sub relation,
+    relates associated-disease;
+
+disease-with-common-parent-are-related sub rule,
+when {
+    $d1 isa disease;
+    $d2 isa disease;
+    $d1 != $d2;
+    $d3 isa disease;
+    (superior-disease: $d3, subordinate-disease: $d1) isa disease-hierarchy;
+    (superior-disease: $d3, subordinate-disease: $d2) isa disease-hierarchy;
+}, then {
+    (associated-disease: $d1, associated-disease: $d2) isa disease-disease-association;
+};
+
+parent-disease-is-related sub rule,
+when {
+    $d1 isa disease;
+    $d2 isa disease;
+    (superior-disease: $d1, subordinate-disease: $d2) isa disease-hierarchy;
+}, then {
+    (associated-disease: $d1, associated-disease: $d2) isa disease-disease-association;
+};
+
+disease-is-related-to-itself sub rule,
+when {
+    $d1 isa disease;
+}, then {
+    (associated-disease: $d1) isa disease-disease-association;
+};

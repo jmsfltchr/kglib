@@ -30,8 +30,8 @@ class Chemical:
         self.index = index
         self.var = f'chem{self.index}'
 
-        keys = {'identifier': identifier, 'name': f'"{name}"'}
-        put_by_keys(tx, 'chemical', keys)
+        keys = {'identifier': identifier}
+        put_by_keys(tx, 'chemical', keys, extra_attributes_to_insert={'name': f'"{name}"'})
         self.match_statement = f'${self.var} isa chemical, has identifier {self.identifier};'
 
 
@@ -41,8 +41,8 @@ class Gene:
         self.identifier = identifier
         self.index = index
         self.var = f'gene{self.index}'
-        keys = {'identifier': identifier, 'name': f'"{name}"'}
-        put_by_keys(tx, 'gene', keys)
+        keys = {'identifier': identifier}
+        put_by_keys(tx, 'gene', keys, extra_attributes_to_insert={'name': f'"{name}"'})
         self.match_statement = f'${self.var} isa gene, has identifier {self.identifier};'
 
 

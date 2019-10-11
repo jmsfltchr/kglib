@@ -17,8 +17,6 @@
 #  under the License.
 #
 
-from kglib.kgcn.examples.ctd.migration.utils import put_by_keys
-
 
 def migrate_genes(batch, tx):
 
@@ -28,7 +26,7 @@ def migrate_genes(batch, tx):
         identifier = line_dict['GeneID']
         symbol = line_dict['GeneSymbol']
 
-        keys = {'identifier': f'"{identifier}"'}
-        extra_attributes_to_insert = {'name': f'"{name}"', 'symbol': f'"{symbol}"'}
-
-        put_by_keys(tx, 'gene', keys, extra_attributes_to_insert=extra_attributes_to_insert)
+        # keys = {'identifier': f'"{identifier}"'}
+        # extra_attributes_to_insert = {'name': f'"{name}"', 'symbol': f'"{symbol}"'}
+        # put_by_keys(tx, 'gene', keys, extra_attributes_to_insert=extra_attributes_to_insert)
+        tx.query(f'insert $d isa gene, has identifier "{identifier}", has name "{name}", has symbol "{symbol}";')

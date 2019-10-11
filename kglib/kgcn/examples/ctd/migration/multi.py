@@ -63,3 +63,16 @@ def multi_thread_batches(batches, keyspace, uri, migration_func, num_processes=N
 
     session.close()
     client.close()
+
+
+def single_thread_batches(batches, keyspace, uri, migration_func, num_processes=None):
+    client = GraknClient(uri=uri)
+    session = client.session(keyspace)
+
+    for batch in batches:
+        tx = session.transaction().write()
+        migration_func(batch, tx)
+        tx.commit()
+
+    session.close()
+    client.close()

@@ -40,17 +40,24 @@ def put_by_keys(tx, type, keys_dict, extra_attributes_to_insert=None):
     for type_key, key_value in keys_dict.items():
         pm_query += f', has {type_key} {key_value}'
 
-    results = list(tx.query(f'match {pm_query}; get;'))
+    match_query = f'match {pm_query}; get;'
+    print(match_query)
+    results = list(tx.query(match_query))
     if len(results) == 0:
         extra = ''
         if extra_attributes_to_insert is not None:
             for attr_name, value in extra_attributes_to_insert.items():
                 attr_statement = f', has {attr_name} {value}'
-                results = list(tx.query(f'match {pm_query}{attr_statement}; get;'))
+
+                match_query = f'match {pm_query}{attr_statement}; get;'
+                print(match_query)
+                results = list(tx.query(match_query))
                 if len(results) == 0:
                     extra += attr_statement
 
-        tx.query(f'insert {pm_query}{extra};')
+        insert_query = f'insert {pm_query}{extra};'
+        print(insert_query)
+        tx.query(insert_query)
 
 
 def assert_one_inserted(answers):
@@ -59,21 +66,16 @@ def assert_one_inserted(answers):
         raise ValueError(f"Found an incorrect number of answers. Expected 1, got {num_answers}")
 
 
-def batcher(items_iterator, batch_size):
+def split_file_into_batches(data_path, line_parser, batch_size, starting_index=0):
+    lines = line_parser(data_path)
     batch = []
 
-    for index, item in enumerate(items_iterator):
+    for index, item in enumerate(lines):
 
-        batch.append((index, item))
+        batch.append((index + starting_index, item))
         if index % batch_size == 0:
             yield batch
             batch = []
-
-
-def split_file_into_batches(data_path, line_parser, batch_size):
-    line_trees = line_parser(data_path)
-    batch_generator = batcher(line_trees, batch_size)
-    return batch_generator
 
 
 def limit_generator(generator, limit=None):

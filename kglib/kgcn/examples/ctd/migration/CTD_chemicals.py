@@ -35,6 +35,9 @@ def migrate_chemicals(batch, tx):
             extra_attributes_to_insert.update({'definition': f'"{definition}"'})
 
         put_by_keys(tx, 'chemical', keys, extra_attributes_to_insert=extra_attributes_to_insert)
+
+        # tx.query(f'insert $d isa gene, has identifier "{identifier}", has name "{name}";')
+
         parent_ids = line_dict['ParentIDs'].split(sep='|')
 
         for parent_id in parent_ids:
