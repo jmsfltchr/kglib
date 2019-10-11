@@ -28,7 +28,7 @@ from kglib.kgcn.examples.ctd.migration.CTD_chemicals_diseases import migrate_che
 from kglib.kgcn.examples.ctd.migration.CTD_diseases import migrate_diseases
 from kglib.kgcn.examples.ctd.migration.CTD_genes import migrate_genes
 from kglib.kgcn.examples.ctd.migration.CTD_genes_diseases import migrate_genes_diseases
-from kglib.kgcn.examples.ctd.migration.test_multi import multi_process_batches
+from kglib.kgcn.examples.ctd.migration.multi import multi_thread_batches
 
 base_data_path = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/"
 base_data_path_snippets = "/Users/jamesfletcher/programming/research/kglib/kgcn/examples/ctd/data/snippets/"
@@ -51,7 +51,7 @@ inputs = [
     #     "template": migrate_genes,
     # },
     {
-        "data_path": f"{base_data_path_snippets}CTD_chemicals.csv",
+        "data_path": f"{base_data_path}CTD_chemicals.csv",
         "batching": split_chemicals_into_batches,
         "migration": migrate_chemicals_batch,
     },
@@ -86,7 +86,7 @@ def migrate():
             batches = batch_func(ip["data_path"], BATCH_SIZE)
             migration_func = ip["migration"]
 
-            multi_process_batches(batches, KEYSPACE, URI, migration_func, num_processes=None)
+            multi_thread_batches(batches, KEYSPACE, URI, migration_func, num_threads=None)
 
             elapsed = time.time() - start_time
             print(f'Time elapsed {elapsed:.1f} seconds')
