@@ -46,44 +46,44 @@ inputs = [
         "data_path": f"{base_data_path}CTD_diseases.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_diseases,
-        "start_index": 10000,
+        "start_index": 100000,
     },
     {
         "data_path": f"{base_data_path}CTD_genes.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_genes,
-        "start_index": 20000,
+        "start_index": 200000,
     },
     {
         "data_path": f"{base_data_path}CTD_chemicals.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_chemicals,
-        "start_index": 30000,
+        "start_index": 300000,
     },
     {
         "data_path": f"{base_data_path}CTD_chem_gene_ixns_structured.xml",
         "parser": parse_xml_to_tree_line_by_line,
         "migration": migrate_chemical_gene_interactions,
-        "start_index": 40000,
+        "start_index": 400000,
     },
     {
         "data_path": f"{base_data_path}CTD_chemicals_diseases.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_chemicals_diseases,
-        "start_index": 50000,
+        "start_index": 500000,
     },
     {
-        "data_path": f"{base_data_path_snippets}CTD_genes_diseases.csv",
+        "data_path": f"{base_data_path}CTD_genes_diseases.csv",
         "parser": parse_csv_to_dictionaries,
         "migration": migrate_genes_diseases,
-        "start_index": 60000,
+        "start_index": 600000,
     },
 ]
 
-KEYSPACE = "ctd_trial_single_thread"
+KEYSPACE = "ctd2"
 URI = "localhost:48555"
-BATCH_SIZE = 5
-NUM_BATCHES = 100
+BATCH_SIZE = 10
+NUM_BATCHES = 4000
 
 
 def migrate():

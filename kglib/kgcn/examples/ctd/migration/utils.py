@@ -43,7 +43,9 @@ def put_by_keys(tx, type, keys_dict, extra_attributes_to_insert=None):
     match_query = f'match {pm_query}; get;'
     print(match_query)
     results = list(tx.query(match_query))
-    if len(results) == 0:
+
+    num_results = len(results)
+    if num_results == 0:
         extra = ''
         if extra_attributes_to_insert is not None:
             for attr_name, value in extra_attributes_to_insert.items():
@@ -58,12 +60,10 @@ def put_by_keys(tx, type, keys_dict, extra_attributes_to_insert=None):
         insert_query = f'insert {pm_query}{extra};'
         print(insert_query)
         tx.query(insert_query)
-
-
-def assert_one_inserted(answers):
-    num_answers = len(list(answers))
-    if num_answers != 1:
-        raise ValueError(f"Found an incorrect number of answers. Expected 1, got {num_answers}")
+    elif num_results == 1:
+        pass
+    else:
+        raise RuntimeError(f'Encountered a duplicate entry for query \n{match_query}')
 
 
 def split_file_into_batches(data_path, line_parser, batch_size, starting_index=0):
@@ -76,6 +76,7 @@ def split_file_into_batches(data_path, line_parser, batch_size, starting_index=0
         if index % batch_size == 0:
             yield batch
             batch = []
+    yield batch
 
 
 def limit_generator(generator, limit=None):

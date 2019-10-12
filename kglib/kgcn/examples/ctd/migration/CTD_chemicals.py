@@ -36,8 +36,6 @@ def migrate_chemicals(batch, tx):
 
         put_by_keys(tx, 'chemical', keys, extra_attributes_to_insert=extra_attributes_to_insert)
 
-        # tx.query(f'insert $d isa gene, has identifier "{identifier}", has name "{name}";')
-
         parent_ids = line_dict['ParentIDs'].split(sep='|')
 
         for parent_id in parent_ids:
@@ -51,4 +49,4 @@ def migrate_chemicals(batch, tx):
                 insert
                     (superior-chemical: $par, subordinate-chemical: $d) isa chemical-hierarchy;
                     ''')
-            tx.query(query)
+            tx.query(query, exacty_one_result=True)

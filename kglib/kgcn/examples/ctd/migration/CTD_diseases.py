@@ -37,8 +37,6 @@ def migrate_diseases(batch, tx):
             extra_attributes_to_insert.update({'definition': f'"{definition}"'})
         put_by_keys(tx, 'disease', keys, extra_attributes_to_insert=extra_attributes_to_insert)
 
-        # tx.query(f'insert $d isa disease, has identifier "{identifier}", has name "{name}";')
-
         parent_ids = line_dict['ParentIDs'].split(sep='|')
 
         for parent_id in parent_ids:
@@ -52,4 +50,4 @@ def migrate_diseases(batch, tx):
             insert
                 (superior-disease: $par, subordinate-disease: $d) isa disease-hierarchy;
                 ''')
-            tx.query(query)
+            tx.query(query, exacty_one_result=True)

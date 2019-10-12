@@ -19,7 +19,7 @@
 
 from inspect import cleandoc
 
-from kglib.kgcn.examples.ctd.migration.utils import put_by_keys, assert_one_inserted
+from kglib.kgcn.examples.ctd.migration.utils import put_by_keys
 
 
 def migrate_genes_diseases(batch, tx):
@@ -68,8 +68,7 @@ def migrate_genes_diseases(batch, tx):
         ''')
 
         print(assoc_query)
-        res = tx.query(assoc_query)
-        assert_one_inserted(res)
+        tx.query(assoc_query, exacty_one_result=True)
 
         for pmid in pmids:
             if pmid != '':  # We get pmids = [''] if there are none
@@ -84,15 +83,14 @@ def migrate_genes_diseases(batch, tx):
                     (sourced-data: $assoc, data-source: $pm) isa data-sourcing;
                     ''')
                 print(pm_query)
-                res = tx.query(pm_query)
-                assert_one_inserted(res)
+                tx.query(pm_query, exacty_one_result=True)
 
         if not evidence:
 
             # put_by_keys(tx, 'chemical', {'identifier': f'"{chem_name}-missing-id"'}, extra_attributes_to_insert={'name': f'"{chem_name}"'})
 
             if len(list(tx.query(f'match $c isa chemical, has name "{chem_name}"; get;'))) == 0:
-                tx.query(f'insert $c isa chemical, has identifier "{chem_name}-missing-id", has name "{chem_name}";')
+                tx.query(f'insert $c isa chemical, has identifier "{chem_name}", has name "{chem_name}";', exacty_one_result=True)
 
             # We can't put the gene if it doesn't exist, since we only have the symbol and not the identifier
             infer_query = cleandoc(f'''
@@ -103,5 +101,4 @@ def migrate_genes_diseases(batch, tx):
                 (inferred-from: $c, inferred-conclusion: $assoc) isa inference, has score {score};                    
             ''')
             print(infer_query)
-            res = tx.query(infer_query)
-            assert_one_inserted(res)
+            tx.query(infer_query, exacty_one_result=True)

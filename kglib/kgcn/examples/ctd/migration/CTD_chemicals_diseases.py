@@ -98,12 +98,12 @@ def migrate_chemicals_diseases(batch, tx):
         ''')
 
         print(assoc_query)
-        tx.query(assoc_query)
+        tx.query(assoc_query, exacty_one_result=True)
 
         for pmid in pmids:
             if pmid != '':  # We get pmids = [''] if there are none
-                pm_keys = {'pmid': pmid}
-                put_by_keys(tx, 'pubmed-citation', pm_keys)
+                gene_keys = {'pmid': pmid}
+                put_by_keys(tx, 'pubmed-citation', gene_keys)
 
                 pm_query = cleandoc(f'''
                 match
@@ -113,11 +113,15 @@ def migrate_chemicals_diseases(batch, tx):
                     (sourced-data: $assoc, data-source: $pm) isa data-sourcing;
                     ''')
                 print(pm_query)
-                tx.query(pm_query)
+                tx.query(pm_query, exacty_one_result=True)
 
         if not evidence:
 
-            # We can't put the gene if it doesn't exist, since we only have the symbol and not the identifier
+            # We can't put the gene if it doesn't exist, since we only have the symbol and not the identifier (but do it anyway)
+            if len(list(tx.query(f'match $c isa gene, has symbol "{gene_symbol}"; get;'))) == 0:
+                tx.query(f'insert $c isa gene, has identifier "{gene_symbol}", has symbol "{gene_symbol}";',
+                         exacty_one_result=True)
+
             infer_query = cleandoc(f'''
             match
                 $g isa gene, has symbol "{gene_symbol}";
@@ -126,4 +130,4 @@ def migrate_chemicals_diseases(batch, tx):
                 (inferred-from: $g, inferred-conclusion: $assoc) isa inference, has score {score};                    
             ''')
             print(infer_query)
-            tx.query(infer_query)
+            tx.query(infer_query, exacty_one_result=True)

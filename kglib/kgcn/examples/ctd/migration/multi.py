@@ -31,7 +31,7 @@ def migrate_batch(session, migration_func, batch):
     success = False
     num_attempts = 0
     while not success:
-        tx = session.transaction().write()
+        tx = TransactionManager(session.transaction().write())
 
         try:
             migration_func(batch, tx)
@@ -70,9 +70,35 @@ def single_thread_batches(batches, keyspace, uri, migration_func, num_processes=
     session = client.session(keyspace)
 
     for batch in batches:
-        tx = session.transaction().write()
+        tx = TransactionManager(session.transaction().write())
         migration_func(batch, tx)
         tx.commit()
 
     session.close()
     client.close()
+
+
+class TransactionManager:
+    def __init__(self, tx):
+        self._tx = tx
+
+    def query(self, query, infer=True, exacty_one_result=False):
+        answers = self._tx.query(query, infer=infer)
+
+        if exacty_one_result:
+            ans = []
+            for i, answer in enumerate(answers):
+                if i > 0:
+                    raise GraknError(f'Encountered 2+ answers, 1 expected for query:\n {query}')
+                ans.append(answer)
+                return ans
+
+            raise GraknError(f'Encountered 0 answers, 1 expected for query:\n {query}')
+        else:
+            return answers
+
+    def close(self):
+        self._tx.close()
+
+    def commit(self):
+        self._tx.commit()

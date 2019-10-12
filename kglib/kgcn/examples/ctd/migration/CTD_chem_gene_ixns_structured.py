@@ -75,7 +75,7 @@ class Interaction:
             ) isa {self.relation_type}, has degree {self.degree}, has identifier "{self.identifier}", has text "{self.text}";
         ''')
         print(query)
-        self.tx.query(query)
+        self.tx.query(query, exacty_one_result=True)
 
         for pmid in self.pmids:
             if pmid != '':  # We get pmids = [''] if there are none
@@ -90,7 +90,7 @@ class Interaction:
                     (sourced-data: $inter, data-source: $pm) isa data-sourcing;
                     ''')
                 print(pm_query)
-                self.tx.query(pm_query)
+                self.tx.query(pm_query, exacty_one_result=True)
 
 
 def recurse(tx, root, base_index):
