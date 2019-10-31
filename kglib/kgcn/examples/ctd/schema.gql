@@ -74,6 +74,7 @@ chemical-hierarchy sub hierarchy,
     relates subordinate-chemical as subordinate;
 
 chemical-gene-interaction sub relation,
+    abstract,
     relates from-actor,
     relates to-actor,
     plays sourced-data,
@@ -119,10 +120,12 @@ pubmed-citation sub entity,
     plays data-source;
 
 # Rules
+
+# disease-disease
 disease-disease-association sub relation,
     relates associated-disease;
 
-disease-with-common-parent-are-related sub rule,
+diseases-with-common-parent-are-related sub rule,
 when {
     $d1 isa disease;
     $d2 isa disease;
@@ -148,4 +151,37 @@ when {
     $d1 isa disease;
 }, then {
     (associated-disease: $d1) isa disease-disease-association;
+};
+
+
+# chemical-chemical
+chemical-chemical-association sub relation,
+    relates associated-chemical;
+
+chemicals-with-common-parent-are-related sub rule,
+when {
+    $c1 isa chemical;
+    $c2 isa chemical;
+    $c1 != $c2;
+    $c3 isa chemical;
+    (superior-chemical: $c3, subordinate-chemical: $c1) isa chemical-hierarchy;
+    (superior-chemical: $c3, subordinate-chemical: $c2) isa chemical-hierarchy;
+}, then {
+    (associated-chemical: $c1, associated-chemical: $c2) isa chemical-chemical-association;
+};
+
+parent-chemical-is-related sub rule,
+when {
+    $c1 isa chemical;
+    $c2 isa chemical;
+    (superior-chemical: $c1, subordinate-chemical: $c2) isa chemical-hierarchy;
+}, then {
+    (associated-chemical: $c1, associated-chemical: $c2) isa chemical-chemical-association;
+};
+
+chemical-is-related-to-itself sub rule,
+when {
+    $c1 isa chemical;
+}, then {
+    (associated-chemical: $c1) isa chemical-chemical-association;
 };

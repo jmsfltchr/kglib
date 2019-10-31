@@ -51,11 +51,11 @@ def migrate_batch(session, migration_func, batch):
     print('++ Successful batch')
 
 
-def multi_thread_batches(batches, keyspace, uri, migration_func, num_processes=None):
+def multi_thread_batches(batches, keyspace, uri, migration_func, num_threads=None):
     client = GraknClient(uri=uri)
     session = client.session(keyspace)
 
-    pool = ThreadPool(num_processes)
+    pool = ThreadPool(num_threads)
     pool.map(partial(migrate_batch, session, migration_func), batches)
 
     pool.close()
@@ -91,6 +91,8 @@ class TransactionManager:
                 if i > 0:
                     raise GraknError(f'Encountered 2+ answers, 1 expected for query:\n {query}')
                 ans.append(answer)
+
+            if len(ans) == 1:
                 return ans
 
             raise GraknError(f'Encountered 0 answers, 1 expected for query:\n {query}')

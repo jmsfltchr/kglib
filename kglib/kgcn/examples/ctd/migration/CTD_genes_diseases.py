@@ -41,8 +41,24 @@ def migrate_genes_diseases(batch, tx):
         direct_evidence = line_dict['DirectEvidence']
         evidence = direct_evidence != ''
 
+        # if evidence:
+        #     raise ValueError(f'Encountered a type of direct evidence: {direct_evidence}')
+        # else:
+        #     chem_name = line_dict['InferenceChemicalName']
+        #     score = line_dict['InferenceScore']
+        #
+        #     relation_type = 'gene-disease-association'
+        #     gene_role = 'associated-gene'
+        #     dis_role = 'associated-disease'
+
         if evidence:
-            raise ValueError(f'Encountered a type of direct evidence: {direct_evidence}')
+            if direct_evidence == 'marker/mechanism':
+                relation_type = 'functional-association'
+                gene_role = 'functional-chemical'
+                dis_role = 'disease-function-of'
+            else:
+                raise ValueError(
+                    f'Encountered a type of direct evidence that is not accounted for: {direct_evidence}')
         else:
             chem_name = line_dict['InferenceChemicalName']
             score = line_dict['InferenceScore']
