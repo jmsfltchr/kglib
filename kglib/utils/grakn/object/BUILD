@@ -1,5 +1,6 @@
-load("@io_bazel_rules_python//python:python.bzl", "py_library")
-load("@pypi_dependencies//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_library")
+load("@graknlabs_kglib_pip//:requirements.bzl",
+       graknlabs_kglib_requirement = "requirement")
 
 
 py_library(

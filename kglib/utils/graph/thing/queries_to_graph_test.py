@@ -31,7 +31,7 @@ from kglib.utils.graph.test.case import GraphTestCase
 class TestConceptDictsFromQuery(unittest.TestCase):
     def test_concept_dicts_are_built_as_expected(self):
         concept_map = MockConceptMap({'x': MockThing('V123', MockType('V456', 'person', 'ENTITY'))})
-        concept_dicts = concept_dict_from_concept_map(concept_map)
+        concept_dicts = concept_dict_from_concept_map(concept_map, None)
 
         expected_concept_dicts = {'x': Thing('V123', 'person', 'entity')}
 
@@ -43,7 +43,7 @@ class TestConceptDictsFromQuery(unittest.TestCase):
             'y': MockThing('V789', MockType('V765', 'employment', 'RELATION')),
         })
 
-        concept_dicts = concept_dict_from_concept_map(concept_map)
+        concept_dicts = concept_dict_from_concept_map(concept_map, None)
 
         expected_concept_dict = {
             'x': Thing('V123', 'person', 'entity'),
@@ -65,7 +65,7 @@ class TestCombineGraphs(GraphTestCase):
         grakn_graph_a.add_edge(employment, person, type='employee')
 
         person_b = Thing('V123', 'person', 'entity')
-        name = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        name = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         grakn_graph_b = nx.MultiDiGraph()
         grakn_graph_b.add_node(person_b)
         grakn_graph_b.add_node(name)
@@ -75,7 +75,7 @@ class TestCombineGraphs(GraphTestCase):
 
         person_ex = Thing('V123', 'person', 'entity')
         employment_ex = Thing('V567', 'employment', 'relation')
-        name_ex = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        name_ex = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_ex)
         expected_combined_graph.add_node(name_ex)
@@ -87,14 +87,14 @@ class TestCombineGraphs(GraphTestCase):
 
     def test_when_graph_node_properties_are_mismatched_exception_is_raised(self):
         person_a = Thing('V123', 'person', 'entity')
-        name_a = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        name_a = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         grakn_graph_a = nx.MultiDiGraph(name='a')
         grakn_graph_a.add_node(person_a, input=1, solution=1)
         grakn_graph_a.add_node(name_a, input=1, solution=1)
         grakn_graph_a.add_edge(person_a, name_a, type='has', input=0, solution=1)
 
         person_b = Thing('V123', 'person', 'entity')
-        name_b = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        name_b = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         grakn_graph_b = nx.MultiDiGraph(name='b')
         grakn_graph_b.add_node(person_b, input=1, solution=1)
         grakn_graph_b.add_node(name_b, input=0, solution=1)
@@ -110,14 +110,14 @@ class TestCombineGraphs(GraphTestCase):
 
     def test_when_graph_edge_properties_are_mismatched_exception_is_raised(self):
         person_a = Thing('V123', 'person', 'entity')
-        name_a = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        name_a = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         grakn_graph_a = nx.MultiDiGraph(name='a')
         grakn_graph_a.add_node(person_a, input=1, solution=1)
         grakn_graph_a.add_node(name_a, input=1, solution=1)
         grakn_graph_a.add_edge(person_a, name_a, type='has', input=0, solution=1)
 
         person_b = Thing('V123', 'person', 'entity')
-        name_b = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        name_b = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         grakn_graph_b = nx.MultiDiGraph(name='b')
         grakn_graph_b.add_node(person_b, input=1, solution=1)
         grakn_graph_b.add_node(name_b, input=1, solution=1)
