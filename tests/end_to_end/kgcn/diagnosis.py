@@ -21,6 +21,7 @@ import sys
 import unittest
 
 from kglib.kgcn.examples.diagnosis.diagnosis import diagnosis_example
+from kglib.kgcn.pipeline.pipeline import Mode
 from kglib.utils.grakn.test.base import GraknServer
 
 TEST_KEYSPACE = "diagnosis"
@@ -39,7 +40,19 @@ class TestDiagnosisExample(unittest.TestCase):
         self._gs.stop()
 
     def test_learning_is_done(self):
-        solveds_tr, solveds_ge = diagnosis_example()
+        print("================================")
+        print("TRAIN AND TEST")
+        print("================================")
+        solveds_tr, solveds_ge = diagnosis_example(mode=Mode.TRAIN_TEST)
+        self.assertGreaterEqual(solveds_tr[-1], 0.7)
+        self.assertLessEqual(solveds_tr[-1], 0.99)
+        self.assertGreaterEqual(solveds_ge[-1], 0.7)
+        self.assertLessEqual(solveds_ge[-1], 0.99)
+
+        print("================================")
+        print("INFER")
+        print("================================")
+        solveds_tr, solveds_ge = diagnosis_example(mode=Mode.INFER)
         self.assertGreaterEqual(solveds_tr[-1], 0.7)
         self.assertLessEqual(solveds_tr[-1], 0.99)
         self.assertGreaterEqual(solveds_ge[-1], 0.7)

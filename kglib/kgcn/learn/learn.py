@@ -16,19 +16,14 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
-import time
-
 import tensorflow as tf
-
+import time
+from graph_nets import utils_np
 from pathlib import Path
 
 from kglib.kgcn.learn.feed import create_placeholders, create_feed_dict, make_all_runnable_in_session
 from kglib.kgcn.learn.loss import loss_ops_preexisting_no_penalty
 from kglib.kgcn.learn.metrics import existence_accuracy
-
-from graph_nets import utils_np
-from graph_nets.graphs import GraphsTuple
 
 
 class KGCNLearner:
@@ -36,24 +31,21 @@ class KGCNLearner:
     Responsible for running a KGCN model
     """
     def __init__(self, model, num_processing_steps_tr=10, num_processing_steps_ge=10):
-        """Args:
-            save_fle: Name to save the trained model to.
-            reload_fle: Name to load saved model from, when doing inference.
-        """
         self._model = model
         self._num_processing_steps_tr = num_processing_steps_tr
         self._num_processing_steps_ge = num_processing_steps_ge
 
     def train(self,
-                 tr_input_graphs,
-                 tr_target_graphs,
-                 ge_input_graphs,
-                 ge_target_graphs,
-                 num_training_iterations=1000,
-                 learning_rate=1e-3,
-                 log_every_epochs=20,
-                 log_dir=None,
-                 save_file='save_model.txt'):
+              tr_input_graphs,
+              tr_target_graphs,
+              ge_input_graphs,
+              ge_target_graphs,
+              num_training_iterations=1000,
+              learning_rate=1e-3,
+              log_every_epochs=20,
+              log_dir=None,
+              save_model=True,
+              save_dir=None):
         """
         Args:
             tr_graphs: In-memory graphs of Grakn concepts for training
@@ -61,13 +53,16 @@ class KGCNLearner:
             num_processing_steps_tr: Number of processing (message-passing) steps for training.
             num_processing_steps_ge: Number of processing (message-passing) steps for generalization.
             num_training_iterations: Number of training iterations
-            log_every_seconds: The time to wait between logging and printing the next set of results.
+            log_every_epochs: The number of epochs to wait between logging and printing the next set of results.
             log_dir: Directory to store TensorFlow events files
-
+            save_model: Flag, whether to save the trained model to disk
+            save_dir: The directory to save the model into
         Returns:
 
         """
-        save_fle = Path(save_file)
+        if save_model:
+            save_dir = Path(save_dir)
+
         tf.set_random_seed(1)
 
         input_ph, target_ph = create_placeholders(tr_input_graphs, tr_target_graphs)
@@ -183,34 +178,32 @@ class KGCNLearner:
                     },
                     feed_dict=feed_dict)
                 
-        # Train the model and save it in the end
-        if not save_fle.is_dir():
-            model_saver.save(sess, save_fle.as_posix())
-            tf.train.write_graph(sess.graph.as_graph_def(), logdir=save_fle.parent.as_posix(), name=save_fle.with_suffix('.pbtxt').as_posix(), as_text=True)
+        if save_model:
+            model_saver.save(sess, save_dir.as_posix() + "/" + "model.ckpt")
+            tf.train.write_graph(sess.graph.as_graph_def(), logdir=save_dir.as_posix(), name="model.pbtxt")
 
         training_info = logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge
         return train_values, test_values, training_info
     
-    # New function to infer / apply without training
-    # Inspired from: https://medium.com/@prasadpal107/saving-freezing-optimizing-for-inference-restoring-of-tensorflow-models-b4146deb21b5
-    def infer(self, input_graphs, target_graphs, log_dir, load_file):
+    def infer(self, input_graphs, target_graphs, load_path):
 
-        reload_file = Path(load_file)
+        load_path = Path(load_path)
 
         input_ph, target_ph = create_placeholders(input_graphs, target_graphs)
         input_ph, target_ph = make_all_runnable_in_session(input_ph, target_ph)
         output_ops_ge = self._model(input_ph, self._num_processing_steps_ge)
-        saver = tf.train.import_meta_graph(reload_file.as_posix() + '.meta')
+        saver = tf.train.import_meta_graph(load_path.as_posix() + '/model.ckpt.meta')
         
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
         tf.reset_default_graph()
         with sess.as_default():
-            if not reload_file.is_dir():
-                saver.restore(sess, reload_file.as_posix())
+            to_restore = load_path.as_posix()
+            if load_path.is_dir():
+                saver.restore(sess, tf.train.latest_checkpoint(to_restore))
             else:
-                print("no file found, restoring failed")
-            
+                print(f"Restoring failed, no trained model file found at {to_restore}")
+
             input_graphs_tuple = utils_np.networkxs_to_graphs_tuple(input_graphs)
             target_graphs_tuple = utils_np.networkxs_to_graphs_tuple(target_graphs)
             feed_dict = {
@@ -223,10 +216,13 @@ class KGCNLearner:
                     "outputs": output_ops_ge,
                 },
                 feed_dict=feed_dict)
-            
+
             correct_ge, solved_ge = existence_accuracy(
                 test_values["target"], test_values["outputs"][-1], use_edges=False)
-            
+
             testing_info = 0, 0, 0, 0, [correct_ge], 0, [solved_ge]
+            print("Cge (test/generalization fraction nodes/edges labeled correctly), "
+                  "Sge (test/generalization fraction examples solved correctly)")
+            print("Cge {:.4f}, Sge {:.4f}".format(correct_ge, solved_ge))
 
         return test_values, testing_info

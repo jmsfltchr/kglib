@@ -22,7 +22,7 @@ import time
 
 from grakn.client import GraknClient
 
-from kglib.kgcn.pipeline.pipeline import pipeline
+from kglib.kgcn.pipeline.pipeline import pipeline, Mode
 from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
 from kglib.utils.grakn.type.type import get_thing_types, get_role_types
 from kglib.utils.graph.iterate import multidigraph_data_iterator
@@ -61,7 +61,9 @@ def diagnosis_example(num_graphs=200,
                       num_processing_steps_tr=5,
                       num_processing_steps_ge=5,
                       num_training_iterations=1000,
-                      keyspace=KEYSPACE, uri=URI):
+                      keyspace=KEYSPACE,
+                      uri=URI,
+                      mode=Mode.TRAIN_TEST):
     """
     Run the diagnosis example from start to finish, including traceably ingesting predictions back into Grakn
 
@@ -79,7 +81,16 @@ def diagnosis_example(num_graphs=200,
 
     tr_ge_split = int(num_graphs*0.5)
 
-    generate_example_graphs(num_graphs, keyspace=keyspace, uri=uri)
+    if mode is Mode.TRAIN_TEST:
+        generate_example_graphs(num_graphs, keyspace=keyspace, uri=uri)
+        output_dir = f"./events/train_and_test/"
+        # output_dir = f"./events/{time.time()}/")  # Use this to keep data from each run
+        load_dir = None,
+    elif mode is Mode.INFER:
+        output_dir = None
+        load_dir = f"./events/train_and_test/"
+    else:
+        raise RuntimeError(f"Unrecognised mode {mode}")
 
     client = GraknClient(uri=uri)
     session = client.session(keyspace=keyspace)
@@ -96,19 +107,18 @@ def diagnosis_example(num_graphs=200,
         print(f'Found node types: {node_types}')
         print(f'Found edge types: {edge_types}')
 
-    ge_graphs, solveds_tr, solveds_ge = pipeline(graphs,
-                                                 tr_ge_split,
-                                                 node_types,
-                                                 edge_types,
+    ge_graphs, solveds_tr, solveds_ge = pipeline(graphs, tr_ge_split, node_types, edge_types,
                                                  num_processing_steps_tr=num_processing_steps_tr,
                                                  num_processing_steps_ge=num_processing_steps_ge,
                                                  num_training_iterations=num_training_iterations,
                                                  continuous_attributes=CONTINUOUS_ATTRIBUTES,
                                                  categorical_attributes=CATEGORICAL_ATTRIBUTES,
-                                                 output_dir=f"./events/{time.time()}/")
+                                                 output_dir=output_dir,
+                                                 load_dir=load_dir,
+                                                 mode=mode)
 
-    with session.transaction().write() as tx:
-        write_predictions_to_grakn(ge_graphs, tx)
+    # with session.transaction().write() as tx:
+    #     write_predictions_to_grakn(ge_graphs, tx)
 
     session.close()
     client.close()
@@ -325,4 +335,12 @@ def write_predictions_to_grakn(graphs, tx):
 
 
 if __name__ == "__main__":
-    diagnosis_example()
+    print("================================")
+    print("TRAIN AND TEST")
+    print("================================")
+    diagnosis_example(mode=Mode.TRAIN_TEST)
+
+    print("================================")
+    print("INFER")
+    print("================================")
+    diagnosis_example(mode=Mode.INFER)

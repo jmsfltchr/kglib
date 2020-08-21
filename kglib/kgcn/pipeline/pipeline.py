@@ -17,10 +17,12 @@
 #  under the License.
 #
 
+import enum
+
 import networkx as nx
 import numpy as np
-from pathlib import Path
 from graph_nets.utils_np import graphs_tuple_to_networkxs
+from pathlib import Path
 
 from kglib.kgcn.learn.learn import KGCNLearner
 from kglib.kgcn.models.core import softmax, KGCN
@@ -30,6 +32,11 @@ from kglib.kgcn.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in
 from kglib.kgcn.plot.plotting import plot_across_training, plot_predictions
 from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator, \
     multidigraph_edge_data_iterator
+
+
+class Mode(enum.Enum):
+    TRAIN_TEST = 0
+    INFER = 1
 
 
 def pipeline(graphs,
@@ -46,9 +53,10 @@ def pipeline(graphs,
              edge_output_size=3,
              node_output_size=3,
              output_dir=None,
-             do_test=False,
-             save_fle="test_model.ckpt",
-             reload_fle=""):
+             load_dir=None,
+             mode=Mode.TRAIN_TEST,
+             save_model=True,
+             ):
 
     ############################################################
     # Manipulate the graph data
@@ -86,28 +94,34 @@ def pipeline(graphs,
                 node_output_size=node_output_size)
 
     learner = KGCNLearner(kgcn,
-                          num_processing_steps_tr=num_processing_steps_tr, # These processing steps indicate how many message-passing iterations to do for every training / testing step
-                          num_processing_steps_ge=num_processing_steps_ge,
-                          save_fle=f'{output_dir}/{save_fle}',
-                          reload_fle=f'{output_dir}/{reload_fle}')
+                          num_processing_steps_tr=num_processing_steps_tr,  # These processing steps indicate how many message-passing iterations to do for every training / testing step
+                          num_processing_steps_ge=num_processing_steps_ge)
 
-    # only test
-    if not (Path(output_dir) / reload_fle).is_dir() and do_test is True:
-        test_values, tr_info = learner.infer(ge_input_graphs,
-                                            ge_target_graphs,
-                                            log_dir=output_dir)
-    # train
+    if mode is Mode.INFER:
+        if load_dir is None:
+            raise RuntimeError("load_dir is required to load a model")
+
+        load_path = Path(load_dir)
+        if not load_path.is_dir():
+            raise RuntimeError(
+                f"A saved model could not be loaded because the load_dir given is not a directory: {load_path}")
+
+        test_values, tr_info = learner.infer(ge_input_graphs, ge_target_graphs, load_path=load_dir)
+    elif mode is Mode.TRAIN_TEST:
+        train_values, test_values, tr_info = learner.train(tr_input_graphs,
+                                                           tr_target_graphs,
+                                                           ge_input_graphs,
+                                                           ge_target_graphs,
+                                                           num_training_iterations=num_training_iterations,
+                                                           log_dir=output_dir,
+                                                           save_model=save_model,
+                                                           save_dir=output_dir)
+
+        output_dir = Path(output_dir).as_posix()
+        plot_across_training(*tr_info, output_file=f'{output_dir}/learning.png')
+        plot_predictions(graphs[tr_ge_split:], test_values, num_processing_steps_ge, output_file=f'{output_dir}/graph.png')
     else:
-        train_values, test_values, tr_info = learner.train(input_graphs,
-                                                 tr_target_graphs,
-                                                 ge_input_graphs,
-                                                 ge_target_graphs,
-                                                 num_training_iterations=num_training_iterations,
-                                                 log_dir=output_dir)
-
-
-    plot_across_training(*tr_info, output_file=f'{output_dir}/learning.png')
-    plot_predictions(graphs[tr_ge_split:], test_values, num_processing_steps_ge, output_file=f'{output_dir}/graph.png')
+        raise RuntimeError("The mode given was not recognised")
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
 

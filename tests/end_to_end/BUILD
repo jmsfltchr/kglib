@@ -8,6 +8,7 @@ py_test(
     ],
     deps = [
         "//kglib/kgcn/examples/diagnosis",
+        "//kglib/kgcn/pipeline:pipeline",
         "//kglib/utils/grakn/test",
     ],
     data = [
