@@ -1,0 +1,114 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+import warnings
+
+from kglib.utils.grakn.object.thing import build_thing
+from kglib.utils.graph.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
+
+
+def concept_dict_from_concept_map(concept_map):
+    """
+    Given a concept map, build a dictionary of the variables present and the concepts they refer to, locally storing any
+    information required about those concepts.
+
+    Args:
+        concept_map: A dict of Concepts provided by Grakn keyed by query variables
+
+    Returns:
+        A dictionary of concepts keyed by query variables
+    """
+    return {variable: build_thing(grakn_concept) for variable, grakn_concept in concept_map.map().items()}
+
+
+def combine_graphs_single_pass(graphs_list):
+    """
+        Combine N graphs into one. Do this by recognising common nodes between the two.
+
+        Args:
+            graphs_list: List of graphs to combine
+
+        Returns:
+            Combined graph
+        """
+    combined_graph = graphs_list[0].__class__()
+    for graph in graphs_list:
+        combined_graph.graph.update(graph.graph)
+        combined_graph.add_nodes_from(graph.nodes(data=True))
+
+        if graph.is_multigraph():
+            combined_graph.add_edges_from(graph.edges(keys=True, data=True))
+        else:
+            combined_graph.add_edges_from(graph.edges(data=True))
+
+    return combined_graph
+
+
+def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction,
+                             concept_dict_converter=concept_dict_to_graph):
+    """
+    Builds a graph of Things, interconnected by roles (and *has*), from a set of queries and graphs representing those
+    queries (variable graphs)of those queries, over a Grakn transaction
+
+    Args:
+        infer: whether to use Grakn's inference engine
+        query_sampler_variable_graph_tuples: A list of tuples, each tuple containing a query, a sampling function,
+            and a variable_graph
+        grakn_transaction: A Grakn transaction
+        concept_dict_converter: The function to use to convert from concept_dicts to a Grakn model. This could be
+            a typical model or a mathematical model
+
+    Returns:
+        A networkx graph
+    """
+
+    query_concept_graphs = []
+
+    for query, sampler, variable_graph in query_sampler_variable_graph_tuples:
+
+        print("working on query: " + query)
+        concept_maps = sampler(grakn_transaction.query().match(query))
+        print("query completed")
+
+        concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]
+        print("constructed concept_dicts")
+
+        answer_concept_graphs = []
+        for concept_dict in concept_dicts:
+            try:
+                answer_concept_graphs.append(concept_dict_converter(concept_dict, variable_graph))
+            except ValueError as e:
+                raise ValueError(str(e) + f'Encountered processing query:\n \"{query}\"')
+
+        if len(answer_concept_graphs) > 1:
+            query_concept_graph = combine_graphs_single_pass(answer_concept_graphs)
+            query_concept_graphs.append(query_concept_graph)
+        else:
+            if len(answer_concept_graphs) > 0:
+                query_concept_graphs.append(answer_concept_graphs[0])
+            else:
+                warnings.warn(f'There were no results for query: \n\"{query}\"\nand so nothing will be added to the '
+                              f'graph for this query')
+
+    if len(query_concept_graphs) == 0:
+        # Raise exception when none of the queries returned any results
+        raise RuntimeError(f'The graph from queries: {[query_sampler_variable_graph_tuple[0] for query_sampler_variable_graph_tuple in query_sampler_variable_graph_tuples]}\n'
+                           f'could not be created, since none of these queries returned results')
+
+    concept_graph = combine_graphs_single_pass(query_concept_graphs)
+    return concept_graph

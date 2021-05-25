@@ -70,3 +70,8 @@ filegroup(
         "@graknlabs_dependencies//tool/release:approval"
     ]
 )
+
+artifact_extractor(
+    name = "grakn-extractor",
+    artifact = "@graknlabs_grakn_core_artifact//file",
+)

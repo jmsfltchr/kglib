@@ -1,4 +1,3 @@
-
 #
 #  Licensed to the Apache Software Foundation (ASF) under one
 #  or more contributor license agreements.  See the NOTICE file
@@ -18,25 +17,21 @@
 #  under the License.
 #
 
+import unittest
 
-class PropertyComparable:
-    """
-    Methods to give to an object such that it can be compared with another object based on their
-    properties/attributes. Avoided using the name 'Attribute' since this is common Grakn terminology.
-    """
-    def __eq__(self, other):
-        """Overrides the default implementation"""
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        return NotImplemented
+from kglib.kgcn_tensorflow.models.attribute import CategoricalAttribute
+import tensorflow as tf
+import numpy as np
 
-    def __ne__(self, other):
-        """Overrides the default implementation (unnecessary in Python 3)"""
-        x = self.__eq__(other)
-        if x is not NotImplemented:
-            return not x
-        return NotImplemented
 
-    def __hash__(self):
-        """Overrides the default implementation"""
-        return hash(self.id)
+class ITCategoricalAttribute(unittest.TestCase):
+    def test_output_tensorspec(self):
+        cat = CategoricalAttribute(2, 5)
+        inp = tf.zeros((3, 1), dtype=tf.float32)
+        output = cat(inp)
+        np.testing.assert_array_equal(tf.TensorShape([3, 5]), output.shape)
+        np.testing.assert_equal(output.dtype, tf.float32)
+
+
+if __name__ == "__main__":
+    unittest.main()

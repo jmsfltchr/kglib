@@ -1,4 +1,3 @@
-
 #
 #  Licensed to the Apache Software Foundation (ASF) under one
 #  or more contributor license agreements.  See the NOTICE file
@@ -18,25 +17,33 @@
 #  under the License.
 #
 
+import unittest
 
-class PropertyComparable:
-    """
-    Methods to give to an object such that it can be compared with another object based on their
-    properties/attributes. Avoided using the name 'Attribute' since this is common Grakn terminology.
-    """
-    def __eq__(self, other):
-        """Overrides the default implementation"""
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        return NotImplemented
+import numpy as np
 
-    def __ne__(self, other):
-        """Overrides the default implementation (unnecessary in Python 3)"""
-        x = self.__eq__(other)
-        if x is not NotImplemented:
-            return not x
-        return NotImplemented
+from kglib.kgcn_data_loader.encoding.standard_encode import stack_features
 
-    def __hash__(self):
-        """Overrides the default implementation"""
-        return hash(self.id)
+
+class TestAugmentDataFields(unittest.TestCase):
+
+    def test_numpy_fields_augmented_as_expected(self):
+        features = [np.array([0, 1, 0]), np.array([5])]
+
+        stacked = stack_features(features)
+
+        expected = np.array([0, 1, 0, 5])
+
+        np.testing.assert_equal(expected, stacked)
+
+    def test_augmenting_non_numpy_numeric(self):
+        data = [np.array([0, 1, 0]), 5]
+
+        stacked = stack_features(data)
+
+        expected = np.array([0, 1, 0, 5])
+
+        np.testing.assert_equal(stacked, expected)
+
+
+if __name__ == "__main__":
+    unittest.main()
